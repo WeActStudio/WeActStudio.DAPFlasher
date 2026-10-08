@@ -391,7 +391,31 @@ public:
         }
 
         /* A probe left over from an interrupted transfer can still have its
-         * endpoints halted; clear them so the first command goes through. */
+         * endpoints halted; clear them so the first command goes through.
+         *
+         * This must be a PIPE RESET - libusb_clear_halt(), which on the Windows
+         * WinUSB backend is WinUsb_ResetPipe(). Never a hand-rolled
+         * CLEAR_FEATURE control transfer.
+         *
+         * On a USB 3.0 link the two look identical at the device: both arrive
+         * as the very same CLEAR_FEATURE(ENDPOINT_HALT) request. The difference
+         * is on the host side. A pipe reset zeroes the endpoint sequence number
+         * owned by the xHCI controller *before* the request goes out; a raw
+         * control transfer leaves it untouched. The probe firmware cannot
+         * honour both, so it follows the pipe-reset case and zeroes its own
+         * sequence to match. With a raw control transfer the two sequences no
+         * longer agree and the endpoint goes permanently deaf: every later
+         * transfer fails (EPIPE on the same handle, a timeout on a fresh one)
+         * until the probe is physically replugged. USB 2.0 has no endpoint
+         * sequence number at all, which is why the distinction only ever shows
+         * up on a USB 3.0 port.
+         *
+         * Measured on the WeAct CH32H417 probe (CMSIS-DAP v2, interface 6):
+         *   libusb_clear_halt(0x07/0x87)       -> endpoint stays alive
+         *   ctrl_transfer(CLEAR_FEATURE, ...)  -> permanently deaf
+         * Firmware-side regression script:
+         *   CH32H417_Logic_Analyzer_1v1/.workbuddy/tmp_ep7winreset.py --clear-halt
+         */
         libusb_clear_halt(handle_, epIn_);
         libusb_clear_halt(handle_, epOut_);
 

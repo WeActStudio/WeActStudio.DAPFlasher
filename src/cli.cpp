@@ -381,15 +381,23 @@ int cliRun(const QStringList &arguments)
     }
 
     int lastPercent = -1;
+    QString lastStatus;
 
     const ProgramResult result = runProgramSession(
         request,
-        [&lastPercent](int percent, const QString &status) {
-            if (percent != lastPercent) {
-                lastPercent = percent;
-                out() << QStringLiteral("[%1%] %2\n").arg(percent, 3).arg(status);
-                out().flush();
-            }
+        [&lastPercent, &lastStatus](int percent, const QString &status) {
+            /* Two steps can land on the same percentage - the first sector to
+             * be erased shares its number with the initialisation that came
+             * before it - so looking at the number alone swallowed the status
+             * of whichever one came second. Both have to match to be a
+             * repeat. */
+            if (percent == lastPercent && status == lastStatus)
+                return true;
+
+            lastPercent = percent;
+            lastStatus = status;
+            out() << QStringLiteral("[%1%] %2\n").arg(percent, 3).arg(status);
+            out().flush();
             return true;
         },
         [](const QString &message, bool isError) {
@@ -404,7 +412,11 @@ int cliRun(const QStringList &arguments)
         return 1;
     }
 
-    out() << "\n" << result.message << "\n";
+    /* No summary line here: the worker already logged it through its note()
+     * before it reported success, so printing result.message again made every
+     * run end with that one line twice. A failure is the other way round -
+     * that path has no note() of its own - which is why the branch above does
+     * print. This mirrors what the graphical program does. */
     return 0;
 }
 

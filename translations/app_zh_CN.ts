@@ -314,7 +314,7 @@
     </message>
     <message>
         <location filename="../src/dap/daptransport.cpp" line="254" />
-        <location filename="../src/dap/daptransport.cpp" line="564" />
+        <location filename="../src/dap/daptransport.cpp" line="588" />
         <source>The probe did not answer (timeout).</source>
         <translation>探针无应答（超时）。</translation>
     </message>
@@ -344,7 +344,7 @@
         <translation>该探针未绑定 WinUSB（或 libusbK）驱动。请安装驱动，或改用它的 USB HID（CMSIS-DAP v1）接口选择同一个探针。</translation>
     </message>
     <message>
-        <location filename="../src/dap/daptransport.cpp" line="493" />
+        <location filename="../src/dap/daptransport.cpp" line="517" />
         <source>CMSIS-DAP bulk transport, length-prefixed framing (2 byte prefix)</source>
         <translation>CMSIS-DAP 批量传输，长度前缀帧（2 字节前缀）</translation>
     </message>
@@ -359,33 +359,33 @@
         <translation>占用 USB 接口失败：%1</translation>
     </message>
     <message>
-        <location filename="../src/dap/daptransport.cpp" line="488" />
+        <location filename="../src/dap/daptransport.cpp" line="512" />
         <source>CMSIS-DAP bulk transport, spec framing (no length prefix)</source>
         <translation>CMSIS-DAP 批量传输，规范帧（无长度前缀）</translation>
     </message>
     <message>
-        <location filename="../src/dap/daptransport.cpp" line="535" />
+        <location filename="../src/dap/daptransport.cpp" line="559" />
         <source>USB bulk write failed: %1</source>
         <translation>USB 批量写入失败：%1</translation>
     </message>
     <message>
-        <location filename="../src/dap/daptransport.cpp" line="568" />
+        <location filename="../src/dap/daptransport.cpp" line="592" />
         <source>USB bulk read failed: %1</source>
         <translation>USB 批量读取失败：%1</translation>
     </message>
     <message>
-        <location filename="../src/dap/daptransport.cpp" line="577" />
-        <location filename="../src/dap/daptransport.cpp" line="587" />
+        <location filename="../src/dap/daptransport.cpp" line="601" />
+        <location filename="../src/dap/daptransport.cpp" line="611" />
         <source>The probe sent a malformed packet.</source>
         <translation>探针返回了格式错误的报文。</translation>
     </message>
     <message>
-        <location filename="../src/dap/daptransport.cpp" line="659" />
+        <location filename="../src/dap/daptransport.cpp" line="683" />
         <source>The probe did not answer DAP_Info. Check that the right interface of the device was selected and that the firmware runs a CMSIS-DAP implementation.</source>
         <translation>探针未应答 DAP_Info。请确认已选择设备的正确接口，且其固件实现了 CMSIS-DAP。</translation>
     </message>
     <message>
-        <location filename="../src/dap/daptransport.cpp" line="699" />
+        <location filename="../src/dap/daptransport.cpp" line="723" />
         <source>The command does not fit into one packet (%1 &gt; %2 bytes).</source>
         <translation>命令超出单个报文长度（%1 &gt; %2 字节）。</translation>
     </message>
