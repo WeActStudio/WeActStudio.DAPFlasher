@@ -1,0 +1,10 @@
+# This project is built with MSYS2/MinGW and every source file in it is LF.
+# Normalise line endings to LF on checkout, so a clone is byte-identical to
+# the repository no matter what core.autocrlf is set to on the machine doing
+# the clone. MSYS2 bash in particular refuses to run a CRLF shell script
+# ("$'\r': command not found").
+* text=auto eol=lf
+
+# Binary assets are stored as-is
+*.png binary
+*.ico binary

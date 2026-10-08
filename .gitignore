@@ -1,0 +1,42 @@
+# Build output
+build/
+build-cli/
+tests/build/
+*.o
+*.obj
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+Makefile*
+.qmake.stash
+*.pdb
+*.ilk
+
+# qmake leaves these next to the sources when it builds in place
+*.exe
+*_resource.rc
+object_script.*
+moc_predefs.h
+
+# Compiled Qt translations (generated from translations/*.ts by lrelease)
+*.qm
+
+# Temporary files produced by verification runs
+build/_ui_*.png
+build/_langcheck.txt
+build/_trace.txt
+
+# Size analysis artefacts
+*.map
+build-map/
+
+# Editors / OS
+.vscode/
+*.swp
+Thumbs.db
+desktop.ini
+
+# WorkBuddy session data (memory notes, caches) - never versioned
+.workbuddy/
