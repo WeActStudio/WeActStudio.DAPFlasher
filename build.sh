@@ -107,8 +107,10 @@ if [ -d "${QT_BIN_DIR}/../share/qt6/mkspecs/win32-g++" ]; then
 fi
 
 # ----------------------------------------------------------------------------
-#  Simplified Chinese translation
+#  UI translations (Simplified Chinese, Russian, German, Spanish)
 # ----------------------------------------------------------------------------
+LANGUAGES="zh_CN ru de es"
+
 generate_translations()
 {
     local ts_dir="${SCRIPT_DIR}/translations"
@@ -124,27 +126,37 @@ generate_translations()
         PYTHON_BIN=""
     fi
 
-    if [ -x "${QT_BIN_DIR}/lupdate-pro" ]; then
-        LUPDATE_BIN="${QT_BIN_DIR}/lupdate-pro"
-    else
+    # Scanning the source directory instead of the .pro file: on a static Qt
+    # lupdate-pro cannot evaluate the project and fails with "Failed to
+    # generate project description", which would leave the .ts files stale.
+    if [ -x "${QT_BIN_DIR}/lupdate" ]; then
         LUPDATE_BIN="${QT_BIN_DIR}/lupdate"
+    else
+        LUPDATE_BIN="${QT_BIN_DIR}/lupdate-pro"
     fi
 
+    local ts_args=""
+    for lang in ${LANGUAGES}; do
+        ts_args="${ts_args} translations/app_${lang}.ts"
+    done
+
     if [ -n "${PYTHON_BIN}" ] && [ -x "${LUPDATE_BIN}" ]; then
-        echo "==> Updating the translation source (lupdate) ..."
-        ( cd "${SCRIPT_DIR}" && "${LUPDATE_BIN}" -no-obsolete "${PRO_FILE}" ) \
+        echo "==> Updating the translation sources (lupdate) ..."
+        ( cd "${SCRIPT_DIR}" && "${LUPDATE_BIN}" -no-obsolete src -ts ${ts_args} ) \
             || echo "Warning: lupdate failed, keeping the existing .ts"
         "${PYTHON_BIN}" "${SCRIPT_DIR_WIN}/tools/i18n_fill.py" "${SCRIPT_DIR_WIN}"
     else
         echo "==> Skipping lupdate (python or lupdate missing), using the existing .ts"
     fi
 
-    if [ -f "${ts_dir}/app_zh_CN.ts" ]; then
-        echo "==> Compiling the translation (lrelease) ..."
-        "${QT_BIN_DIR}/lrelease" "${SCRIPT_DIR_WIN}/translations/app_zh_CN.ts" \
-            -qm "${SCRIPT_DIR_WIN}/src/translations/app_zh_CN.qm"
-        touch "${SCRIPT_DIR}/src/translations.qrc"
-    fi
+    echo "==> Compiling the translations (lrelease) ..."
+    for lang in ${LANGUAGES}; do
+        if [ -f "${ts_dir}/app_${lang}.ts" ]; then
+            "${QT_BIN_DIR}/lrelease" "${SCRIPT_DIR_WIN}/translations/app_${lang}.ts" \
+                -qm "${SCRIPT_DIR_WIN}/src/translations/app_${lang}.qm"
+        fi
+    done
+    touch "${SCRIPT_DIR}/src/translations.qrc"
 }
 
 if [ "$1" = "ts" ]; then

@@ -65,7 +65,8 @@ void printUsage()
     out() << "  --no-reset           Leave the target halted after programming\n";
     out() << "  --reset-mode <mode>  Reset mode: software, hardware or auto (default software)\n";
     out() << "  --all-hid            Also list USB HID devices that are not CMSIS-DAP\n";
-    out() << "  --lang <code>        Output language: auto, en or zh_CN (default auto)\n";
+    out() << "  --lang <code>        Output language: auto, en, zh_CN, ru, de or es\n"
+             "                       (default auto)\n";
     out() << "  --help               This text\n";
     out() << "  --version            Print the version\n";
     out() << "\nExit codes: 0 success, 1 failure, 2 usage error\n";

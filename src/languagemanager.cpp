@@ -1,7 +1,8 @@
 /*
  * CH32H417 Logic Analyzer firmware upgrade tool
  *
- * UI language management (English / Simplified Chinese, follow-system option)
+ * UI language management (English / Simplified Chinese / Russian / German /
+ * Spanish, plus a follow-system option)
  *
  * Copyright (C) 2026 WeAct Studio
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -42,6 +43,12 @@ QString qmFileName(LanguageManager::Language lang)
     switch (lang) {
     case LanguageManager::Language::ChineseSimplified:
         return QStringLiteral("app_zh_CN.qm");
+    case LanguageManager::Language::Russian:
+        return QStringLiteral("app_ru.qm");
+    case LanguageManager::Language::German:
+        return QStringLiteral("app_de.qm");
+    case LanguageManager::Language::Spanish:
+        return QStringLiteral("app_es.qm");
     case LanguageManager::Language::English:
     default:
         /* English is the source language, there is no app_en.qm */
@@ -78,6 +85,12 @@ LanguageManager::Language detectSystemLanguage()
        there is one Chinese translation covering both scripts. */
     if (name.startsWith(QLatin1String("zh")))
         return LanguageManager::Language::ChineseSimplified;
+    if (name.startsWith(QLatin1String("ru")))
+        return LanguageManager::Language::Russian;
+    if (name.startsWith(QLatin1String("de")))
+        return LanguageManager::Language::German;
+    if (name.startsWith(QLatin1String("es")))
+        return LanguageManager::Language::Spanish;
 
     return LanguageManager::Language::English;
 }
@@ -111,11 +124,14 @@ LanguageManager *LanguageManager::instance()
 
 QStringList LanguageManager::preferenceNames()
 {
-    /* Same order as the Preference enum: Auto / English / ChineseSimplified */
+    /* Same order as the Preference enum */
     return QStringList()
            << QCoreApplication::translate("LanguageManager", "Follow System(&A)")
            << QCoreApplication::translate("LanguageManager", "English(&E)")
-           << QCoreApplication::translate("LanguageManager", "Simplified Chinese(&C)");
+           << QCoreApplication::translate("LanguageManager", "Simplified Chinese(&C)")
+           << QCoreApplication::translate("LanguageManager", "Russian(&R)")
+           << QCoreApplication::translate("LanguageManager", "German(&G)")
+           << QCoreApplication::translate("LanguageManager", "Spanish(&S)");
 }
 
 LanguageManager::Language LanguageManager::resolvedLanguage() const
@@ -123,9 +139,19 @@ LanguageManager::Language LanguageManager::resolvedLanguage() const
     if (preference_ == Preference::Auto)
         return detectSystemLanguage();
 
-    return preference_ == Preference::ChineseSimplified
-               ? Language::ChineseSimplified
-               : Language::English;
+    switch (preference_) {
+    case Preference::ChineseSimplified:
+        return Language::ChineseSimplified;
+    case Preference::Russian:
+        return Language::Russian;
+    case Preference::German:
+        return Language::German;
+    case Preference::Spanish:
+        return Language::Spanish;
+    case Preference::English:
+    default:
+        return Language::English;
+    }
 }
 
 QString LanguageManager::languageCode() const
@@ -133,6 +159,12 @@ QString LanguageManager::languageCode() const
     switch (resolvedLanguage()) {
     case Language::ChineseSimplified:
         return QStringLiteral("zh_CN");
+    case Language::Russian:
+        return QStringLiteral("ru");
+    case Language::German:
+        return QStringLiteral("de");
+    case Language::Spanish:
+        return QStringLiteral("es");
     case Language::English:
     default:
         return QStringLiteral("en");
@@ -144,6 +176,12 @@ QString LanguageManager::languageDisplayName() const
     switch (resolvedLanguage()) {
     case Language::ChineseSimplified:
         return QCoreApplication::translate("LanguageManager", "Simplified Chinese");
+    case Language::Russian:
+        return QCoreApplication::translate("LanguageManager", "Russian");
+    case Language::German:
+        return QCoreApplication::translate("LanguageManager", "German");
+    case Language::Spanish:
+        return QCoreApplication::translate("LanguageManager", "Spanish");
     case Language::English:
     default:
         return QCoreApplication::translate("LanguageManager", "English");
@@ -154,16 +192,20 @@ void LanguageManager::loadFromSettings()
 {
     QSettings settings(kSettingsOrg, kSettingsApp);
     /* No saved preference yet: follow the system language */
-    const QString saved = settings.value(kSettingsKey, QStringLiteral("auto")).toString();
+    const QString saved = settings.value(kSettingsKey, QStringLiteral("auto"))
+                              .toString().toLower();
 
-    if (saved.compare(QLatin1String("zh_CN"), Qt::CaseInsensitive) == 0
-        || saved.compare(QLatin1String("zh"), Qt::CaseInsensitive) == 0)
+    preference_ = Preference::Auto;
+    if (saved.startsWith(QLatin1String("zh")))
         preference_ = Preference::ChineseSimplified;
-    else if (saved.compare(QLatin1String("en"), Qt::CaseInsensitive) == 0
-             || saved.compare(QLatin1String("en_US"), Qt::CaseInsensitive) == 0)
+    else if (saved.startsWith(QLatin1String("ru")))
+        preference_ = Preference::Russian;
+    else if (saved.startsWith(QLatin1String("de")))
+        preference_ = Preference::German;
+    else if (saved.startsWith(QLatin1String("es")))
+        preference_ = Preference::Spanish;
+    else if (saved.startsWith(QLatin1String("en")))
         preference_ = Preference::English;
-    else
-        preference_ = Preference::Auto;
 }
 
 void LanguageManager::saveToSettings()
@@ -174,6 +216,15 @@ void LanguageManager::saveToSettings()
     switch (preference_) {
     case Preference::ChineseSimplified:
         value = QStringLiteral("zh_CN");
+        break;
+    case Preference::Russian:
+        value = QStringLiteral("ru");
+        break;
+    case Preference::German:
+        value = QStringLiteral("de");
+        break;
+    case Preference::Spanish:
+        value = QStringLiteral("es");
         break;
     case Preference::English:
         value = QStringLiteral("en");
@@ -199,7 +250,7 @@ void LanguageManager::uninstallTranslator()
 bool LanguageManager::loadLanguage(Language lang)
 {
     /* English is the source language of every UI string: nothing to load,
-       just drop the Chinese translator if one is installed. */
+       just drop the translator if one is installed. */
     if (lang == Language::English) {
         uninstallTranslator();
         current_ = Language::English;

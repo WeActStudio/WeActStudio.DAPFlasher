@@ -243,7 +243,7 @@
     <message>
         <location filename="../src/dap/cmsisdap.cpp" line="1297" />
         <source>The probe answered a poll with no data.</source>
-        <translation type="unfinished" />
+        <translation>探针回应了轮询，但没有数据。</translation>
     </message>
 </context>
 <context>
@@ -801,27 +801,57 @@
 <context>
     <name>LanguageManager</name>
     <message>
-        <location filename="../src/languagemanager.cpp" line="116" />
+        <location filename="../src/languagemanager.cpp" line="129" />
         <source>Follow System(&amp;A)</source>
         <translation>跟随系统(&amp;A)</translation>
     </message>
     <message>
-        <location filename="../src/languagemanager.cpp" line="117" />
+        <location filename="../src/languagemanager.cpp" line="130" />
         <source>English(&amp;E)</source>
         <translation>English(&amp;E)</translation>
     </message>
     <message>
-        <location filename="../src/languagemanager.cpp" line="118" />
+        <location filename="../src/languagemanager.cpp" line="131" />
         <source>Simplified Chinese(&amp;C)</source>
         <translation>简体中文(&amp;C)</translation>
     </message>
     <message>
-        <location filename="../src/languagemanager.cpp" line="146" />
+        <location filename="../src/languagemanager.cpp" line="132" />
+        <source>Russian(&amp;R)</source>
+        <translation>俄语(&amp;R)</translation>
+    </message>
+    <message>
+        <location filename="../src/languagemanager.cpp" line="133" />
+        <source>German(&amp;G)</source>
+        <translation>德语(&amp;G)</translation>
+    </message>
+    <message>
+        <location filename="../src/languagemanager.cpp" line="134" />
+        <source>Spanish(&amp;S)</source>
+        <translation>西班牙语(&amp;S)</translation>
+    </message>
+    <message>
+        <location filename="../src/languagemanager.cpp" line="178" />
         <source>Simplified Chinese</source>
         <translation>简体中文</translation>
     </message>
     <message>
-        <location filename="../src/languagemanager.cpp" line="149" />
+        <location filename="../src/languagemanager.cpp" line="180" />
+        <source>Russian</source>
+        <translation>俄语</translation>
+    </message>
+    <message>
+        <location filename="../src/languagemanager.cpp" line="182" />
+        <source>German</source>
+        <translation>德语</translation>
+    </message>
+    <message>
+        <location filename="../src/languagemanager.cpp" line="184" />
+        <source>Spanish</source>
+        <translation>西班牙语</translation>
+    </message>
+    <message>
+        <location filename="../src/languagemanager.cpp" line="187" />
         <source>English</source>
         <translation>English</translation>
     </message>
@@ -1058,7 +1088,7 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="863" />
         <source>&lt;font color='%1'&gt;Identifying the target ...&lt;/font&gt;</source>
-        <translation type="unfinished" />
+        <translation>&lt;font color='%1'&gt;正在识别目标 ...&lt;/font&gt;</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="930" />

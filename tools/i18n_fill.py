@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Fill the Qt translation file with the Simplified Chinese translations.
+Fill the Qt translation files with the Simplified Chinese, Russian, German and
+Spanish translations.
 
-English is the source language of every tr() string in the source code, so only
-translations/app_zh_CN.ts needs a translation; switching the UI to English just
-removes the installed translator (see LanguageManager).
+English is the source language of every tr() string in the source code, so
+app_en.ts does not exist; switching the UI to English just removes the
+installed translator (see LanguageManager). Each of the other languages has its
+own .ts file, and the dictionaries live next to this script:
+i18n_dict_ru.py, i18n_dict_de.py and i18n_dict_es.py.
 
-The dictionary below must cover *every* message that lupdate extracts from the
-project. Run the script after lupdate: any source text that is not in the
+Every dictionary must cover *every* message that lupdate extracts from the
+project. Run the script after lupdate: a source text that is not in a
 dictionary is reported as MISSING (and left unfinished, so it shows up as
-English in the UI), and any dictionary entry that no longer exists in the
-source is reported as UNUSED.
+English in the UI), and a dictionary entry that no longer exists in the source
+is reported as UNUSED.
 
 Usage:
     python tools/i18n_fill.py <project directory>
@@ -18,6 +21,10 @@ Usage:
 import sys
 import os
 import xml.etree.ElementTree as ET
+
+from i18n_dict_ru import RU
+from i18n_dict_de import DE
+from i18n_dict_es import ES
 
 # English source text -> Simplified Chinese translation
 ZH = {
@@ -80,7 +87,13 @@ ZH = {
     "Follow System(&A)": "跟随系统(&A)",
     "English(&E)": "English(&E)",
     "Simplified Chinese(&C)": "简体中文(&C)",
+    "Russian(&R)": "俄语(&R)",
+    "German(&G)": "德语(&G)",
+    "Spanish(&S)": "西班牙语(&S)",
     "Simplified Chinese": "简体中文",
+    "Russian": "俄语",
+    "German": "德语",
+    "Spanish": "西班牙语",
     "English": "English",
 
     # ---------------------------------------------------------------- MainWindow
@@ -137,6 +150,8 @@ ZH = {
         "<font color='%1'>探针已连接，但未能识别目标</font>",
     "SWD": "SWD",
     "Identifying the target over %1 ...": "正在通过 %1 识别目标 ...",
+    "<font color='%1'>Identifying the target ...</font>":
+        "<font color='%1'>正在识别目标 ...</font>",
     "CMSIS-DAP firmware: %1": "CMSIS-DAP 固件版本：%1",
     "CPUID %1, DP IDCODE %2, core %3": "CPUID %1，DP IDCODE %2，内核 %3",
     "halted": "已暂停",
@@ -349,6 +364,7 @@ ZH = {
         "探针只完成了 %2 次块传输中的 %1 次。",
     "The probe sent a truncated block transfer payload.":
         "探针返回的块传输数据被截断。",
+    "The probe answered a poll with no data.": "探针回应了轮询，但没有数据。",
 
     "Unknown Cortex-M core": "未知的 Cortex-M 内核",
     "No Cortex-M core answered at CPUID (0x%1).":
@@ -485,8 +501,6 @@ ZH = {
     "Init() failed with code %1.": "Init() 失败，错误码 %1。",
     "Init() did not complete, restarting the algorithm (%1 of %2): %3":
         "Init() 未完成，正在重启算法（第 %1 次，共 %2 次）：%3",
-    "The core could not be halted (%1). It has been reset and halted on the reset vector instead (%2).":
-        "内核无法暂停（%1）。已改为复位目标，并在复位向量处将其暂停（%2）。",
     "Initialised.": "初始化完成。",
     "UnInit() failed: %1": "UnInit() 失败：%1",
     "UnInit() returned code %1.": "UnInit() 返回错误码 %1。",
@@ -546,17 +560,26 @@ def main():
     root_dir = sys.argv[1] if len(sys.argv) > 1 else '.'
     base = os.path.join(root_dir, 'translations')
 
-    missing, used = fill(os.path.join(base, 'app_zh_CN.ts'), lambda s: ZH.get(s))
+    dictionaries = (('zh_CN', ZH), ('ru', RU), ('de', DE), ('es', ES))
 
-    print('zh_CN: filled, missing %d' % len(missing))
-    for ctx, src in missing:
-        print('  [MISSING][%s] %s' % (ctx, src.replace('\n', '\\n')))
+    for code, dictionary in dictionaries:
+        path = os.path.join(base, 'app_%s.ts' % code)
+        if not os.path.exists(path):
+            print('%s: %s is missing, skipped' % (code, path))
+            continue
 
-    unused = sorted(set(ZH) - used)
-    if unused:
-        print('  [UNUSED] %d dictionary entr(ies) not present in the sources:' % len(unused))
-        for src in unused:
-            print('    %s' % src.replace('\n', '\\n'))
+        missing, used = fill(path, lambda s, d=dictionary: d.get(s))
+
+        print('%s: filled, missing %d' % (code, len(missing)))
+        for ctx, src in missing:
+            print('  [MISSING][%s] %s' % (ctx, src.replace('\n', '\\n')))
+
+        unused = sorted(set(dictionary) - used)
+        if unused:
+            print('  [UNUSED] %d dictionary entr(ies) not present in the sources:'
+                  % len(unused))
+            for src in unused:
+                print('    %s' % src.replace('\n', '\\n'))
 
 
 if __name__ == '__main__':

@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/i18n">
         <file alias="app_zh_CN.qm">translations/app_zh_CN.qm</file>
+        <file alias="app_ru.qm">translations/app_ru.qm</file>
+        <file alias="app_de.qm">translations/app_de.qm</file>
+        <file alias="app_es.qm">translations/app_es.qm</file>
     </qresource>
 </RCC>

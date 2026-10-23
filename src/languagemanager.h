@@ -1,7 +1,8 @@
 /*
- * CH32H417 Logic Analyzer firmware upgrade tool
+ * WeAct Studio DAP Flasher
  *
- * UI language management (English / Simplified Chinese, follow-system option)
+ * UI language management (English / Simplified Chinese / Russian / German /
+ * Spanish, plus a follow-system option)
  *
  * Copyright (C) 2026 WeAct Studio
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -19,16 +20,15 @@ class QTranslator;
 /**
  * UI language management.
  *
- * - Two UI languages are available: English and Simplified Chinese.
- * - "Follow System" detects the system language and falls back to English
- *   for anything that is not Chinese.
+ * - Five UI languages are available, plus "Follow System" (any unsupported
+ *   system language falls back to English).
  * - The selection is stored in QSettings and restored on the next start.
- * - Switching the language posts a LanguageChange event to every top level
- *   widget, so the UI refreshes immediately without restarting.
+ * - Switching the language posts a LanguageChange event to every widget, so
+ *   the UI refreshes immediately without restarting.
  *
- * English is the source language of every string in the source code; the
- * Chinese text lives in translations/app_zh_CN.ts. Switching to English
- * therefore only requires removing the installed translator.
+ * English is the source language of every string in the source code; the other
+ * languages live in translations/app_<lang>.ts. Switching to English therefore
+ * only requires removing the installed translator.
  */
 class LanguageManager : public QObject
 {
@@ -39,13 +39,19 @@ public:
     enum class Preference {
         Auto,               /**< Follow the system language */
         English,            /**< English */
-        ChineseSimplified   /**< Simplified Chinese */
+        ChineseSimplified,  /**< Simplified Chinese */
+        Russian,            /**< Russian */
+        German,             /**< German */
+        Spanish             /**< Spanish */
     };
 
     /** Effective language */
     enum class Language {
         English,            /**< en */
-        ChineseSimplified   /**< zh_CN */
+        ChineseSimplified,  /**< zh_CN */
+        Russian,            /**< ru */
+        German,             /**< de */
+        Spanish             /**< es */
     };
 
     static LanguageManager *instance();
@@ -56,7 +62,7 @@ public:
     /** Language currently in effect (Auto already resolved) */
     Language resolvedLanguage() const;
 
-    /** Qt name of the effective language (en / zh_CN) */
+    /** Qt name of the effective language (en / zh_CN / ru / de / es) */
     QString languageCode() const;
 
     /** Localised name of the effective language, used in the menu */

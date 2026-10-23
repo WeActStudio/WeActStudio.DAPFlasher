@@ -69,6 +69,12 @@ int main(int argc, char *argv[])
         else if (value.compare(QLatin1String("zh_CN"), Qt::CaseInsensitive) == 0
                  || value.compare(QLatin1String("zh"), Qt::CaseInsensitive) == 0)
             langMgr->setPreference(LanguageManager::Preference::ChineseSimplified);
+        else if (value.compare(QLatin1String("ru"), Qt::CaseInsensitive) == 0)
+            langMgr->setPreference(LanguageManager::Preference::Russian);
+        else if (value.compare(QLatin1String("de"), Qt::CaseInsensitive) == 0)
+            langMgr->setPreference(LanguageManager::Preference::German);
+        else if (value.compare(QLatin1String("es"), Qt::CaseInsensitive) == 0)
+            langMgr->setPreference(LanguageManager::Preference::Spanish);
         else
             langMgr->setPreference(LanguageManager::Preference::Auto);
         break;

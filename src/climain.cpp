@@ -48,7 +48,8 @@ QString systemLanguageName()
     return QLocale::system().name().toLower();
 }
 
-bool wantsChinese(const QStringList &arguments)
+/** Qt language code for this run; empty means English (the source language) */
+QString resolveLanguageCode(const QStringList &arguments)
 {
     /* --lang=<x> applies to this run only. A command line switch must not
      * rewrite the language the graphical program was set to, and it must not
@@ -62,11 +63,14 @@ bool wantsChinese(const QStringList &arguments)
                                   ? argument.section(QLatin1Char('='), 1)
                                   : (i + 1 < arguments.size() ? arguments.at(++i) : QString());
 
-        if (value.compare(QLatin1String("en"), Qt::CaseInsensitive) == 0)
-            return false;
-        if (value.compare(QLatin1String("zh"), Qt::CaseInsensitive) == 0
-            || value.compare(QLatin1String("zh_CN"), Qt::CaseInsensitive) == 0)
-            return true;
+        const QString code = value.toLower();
+        if (code == QLatin1String("en"))
+            return QString();
+        if (code == QLatin1String("zh") || code == QLatin1String("zh_cn"))
+            return QStringLiteral("zh_CN");
+        if (code == QLatin1String("ru") || code == QLatin1String("de")
+            || code == QLatin1String("es"))
+            return code;
         break;   /* auto or unknown: fall through to the saved preference */
     }
 
@@ -74,26 +78,35 @@ bool wantsChinese(const QStringList &arguments)
     const QSettings settings(QStringLiteral("WeActStudio"),
                              QStringLiteral("WeAct Studio DAP Flasher"));
     const QString saved = settings.value(QStringLiteral("language"),
-                                         QStringLiteral("auto")).toString();
+                                         QStringLiteral("auto")).toString().toLower();
 
-    if (saved.compare(QLatin1String("zh_CN"), Qt::CaseInsensitive) == 0
-        || saved.compare(QLatin1String("zh"), Qt::CaseInsensitive) == 0)
-        return true;
-    if (saved.compare(QLatin1String("en"), Qt::CaseInsensitive) == 0
-        || saved.compare(QLatin1String("en_US"), Qt::CaseInsensitive) == 0)
-        return false;
+    if (saved.startsWith(QLatin1String("zh")))
+        return QStringLiteral("zh_CN");
+    if (saved == QLatin1String("ru") || saved == QLatin1String("de")
+        || saved == QLatin1String("es"))
+        return saved;
+    if (saved.startsWith(QLatin1String("en")))
+        return QString();
 
-    return systemLanguageName().startsWith(QLatin1String("zh"));
+    const QString system = systemLanguageName();
+    if (system.startsWith(QLatin1String("zh")))
+        return QStringLiteral("zh_CN");
+    if (system.startsWith(QLatin1String("ru")) || system.startsWith(QLatin1String("de"))
+        || system.startsWith(QLatin1String("es")))
+        return system.left(2);
+
+    return QString();
 }
 
-/** Install the compiled Chinese translation; English is the source language */
+/** Install the compiled translation; English is the source language */
 void installTranslator(const QStringList &arguments)
 {
-    if (!wantsChinese(arguments))
+    const QString code = resolveLanguageCode(arguments);
+    if (code.isEmpty())
         return;
 
     QTranslator *translator = new QTranslator(qApp);
-    if (translator->load(QStringLiteral(":/i18n/app_zh_CN.qm")))
+    if (translator->load(QStringLiteral(":/i18n/app_") + code + QStringLiteral(".qm")))
         qApp->installTranslator(translator);
     else
         delete translator;

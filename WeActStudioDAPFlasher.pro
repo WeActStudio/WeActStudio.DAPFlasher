@@ -109,15 +109,18 @@ LIBS += -L$$MSYS_PREFIX_WIN/lib -lusb-1.0
 LIBS += -lsetupapi -lhid -lcfgmgr32
 
 # ----------------------------------------------------------------------------
-#  UI translation (Simplified Chinese)
+#  UI translations (Simplified Chinese, Russian, German, Spanish)
 #
 #  English is the source language of every tr() string in the sources;
-#  translations/app_zh_CN.ts is compiled with lrelease into
-#  src/translations/app_zh_CN.qm and packed into the executable through
+#  translations/app_<lang>.ts is compiled with lrelease into
+#  src/translations/app_<lang>.qm and packed into the executable through
 #  src/translations.qrc (no external file needed at run time).
 # ----------------------------------------------------------------------------
 TRANSLATIONS += \
-    $$PWD/translations/app_zh_CN.ts
+    $$PWD/translations/app_zh_CN.ts \
+    $$PWD/translations/app_ru.ts \
+    $$PWD/translations/app_de.ts \
+    $$PWD/translations/app_es.ts
 
 RESOURCES += $$PWD/src/translations.qrc
 RESOURCES += $$PWD/resources/resources.qrc
