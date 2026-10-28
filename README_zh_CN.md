@@ -30,6 +30,10 @@ dapflasher --erase-chip --algo STM32F4xx_512.FLM         # 只擦整片，用于
 
 全部参数见 `dapflasher --help`；退出码 `0` 成功、`1` 失败、`2` 参数错误。
 
+## 下载
+
+预编译包见 [Releases](https://github.com/WeActStudio/WeActStudio.DAPFlasher/releases)，Windows 10/11 64 位，解压即用，无需安装运行时。
+
 ## 从源码构建
 
 需要 MSYS2 MINGW64、静态 Qt（Qt5/Qt6 均可）、hidapi、libusb：
@@ -39,7 +43,7 @@ pacman -S mingw-w64-x86_64-qt6-static mingw-w64-x86_64-hidapi mingw-w64-x86_64-l
 ./build.sh        # 产物在 build/ 和 build-cli/
 ```
 
-运行时需要能找到 `libusb-1.0.dll`、`libhidapi-0.dll`（MSYS2 的 `mingw64/bin` 下）。
+hidapi 和 libusb 都按静态库链接进 exe，产物不依赖任何 MSYS2 运行时 DLL，两个 exe 拷到任意目录即可运行。
 
 ## 许可证
 

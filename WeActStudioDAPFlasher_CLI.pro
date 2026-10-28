@@ -82,8 +82,10 @@ INCLUDEPATH += $$MSYS_PREFIX_WIN/include/libusb-1.0
 # Chinese, without needing QtWidgets.
 RESOURCES += $$PWD/src/translations.qrc
 
-LIBS += $$MSYS_PREFIX_WIN/lib/libhidapi.dll.a
-LIBS += $$MSYS_PREFIX_WIN/lib/libusb-1.0.dll.a
+# Link the static archives, not the import libraries: the released console
+# companion must run on its own without the MSYS2 runtime DLLs next to it.
+LIBS += -L$$MSYS_PREFIX_WIN/lib -lhidapi
+LIBS += -L$$MSYS_PREFIX_WIN/lib -lusb-1.0
 LIBS += -lsetupapi -lhid -lcfgmgr32
 
 # GetUserDefaultLocaleName needs Vista+ API declarations in MinGW headers

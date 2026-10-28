@@ -38,5 +38,8 @@ build-map/
 Thumbs.db
 desktop.ini
 
+# Python bytecode from the translation helper scripts
+__pycache__/
+
 # WorkBuddy session data (memory notes, caches) - never versioned
 .workbuddy/

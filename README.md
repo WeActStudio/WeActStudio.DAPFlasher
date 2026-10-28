@@ -38,6 +38,11 @@ dapflasher --erase-chip --algo STM32F4xx_512.FLM         # erase only, to unbric
 See `dapflasher --help` for every option. Exit codes: `0` success, `1` failure,
 `2` usage error.
 
+## Download
+
+Prebuilt packages are on the [Releases](https://github.com/WeActStudio/WeActStudio.DAPFlasher/releases)
+page. Windows 10/11 64-bit, unzip and run, no runtime installation needed.
+
 ## Building from source
 
 MSYS2 MINGW64, a static Qt (Qt5 or Qt6), hidapi and libusb are required:
@@ -47,8 +52,8 @@ pacman -S mingw-w64-x86_64-qt6-static mingw-w64-x86_64-hidapi mingw-w64-x86_64-l
 ./build.sh        # output in build/ and build-cli/
 ```
 
-At run time `libusb-1.0.dll` and `libhidapi-0.dll` must be reachable (they ship in
-MSYS2's `mingw64/bin`).
+hidapi and libusb are linked statically, so the executables depend on no MSYS2
+runtime DLL; copying the two `.exe` files anywhere is enough.
 
 ## License
 
