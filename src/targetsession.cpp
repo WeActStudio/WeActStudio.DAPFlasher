@@ -53,6 +53,11 @@ bool openSession(const DapProbeInfo &probe, quint32 clockHz, const SessionLog &l
         info->cpuid = core.cpuid();
         info->coreName = core.coreName();
 
+        /* The core is known by now; the chip behind it is a separate read.
+         * A target that does not answer the id register just keeps the core
+         * name, which is what the window showed before the table existed. */
+        info->mcu = identifyMcu(&link);
+
         quint32 dhcsr = 0;
         QString ignored;
         if (link.readMem32(0xE000EDF0u, &dhcsr, 1, ignored))

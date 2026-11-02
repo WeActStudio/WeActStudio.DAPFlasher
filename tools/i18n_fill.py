@@ -262,6 +262,12 @@ ZH = {
     "-": "-",
     "<font color='%1'>%2</font>": "<font color='%1'>%2</font>",
     "No Probe": "未发现探针",
+    "Please Wait": "请稍候",
+    "Debug port: %1": "调试口：%1",
+    "Vendor device id %1 at %2, revision %3":
+        "厂商设备 ID %1（位于 %2），版本 %3",
+    "The target is still being identified. Try again in a moment.":
+        "正在识别目标，请稍后再试。",
     "Select a CMSIS-DAP probe first.": "请先选择一个 CMSIS-DAP 探针。",
     "Select a debug probe first.": "请先选择一个调试探针。",
     "Halt Failed": "暂停失败",
@@ -293,6 +299,7 @@ ZH = {
 
     # -------------------------------------------------- CmsisDap / CortexM (SWD)
     "No probe is open.": "没有打开的探针。",
+    "The address 0x%1 is not word aligned.": "地址 0x%1 未按字对齐。",
     "The probe sent an empty answer.": "探针返回了空应答。",
     "The probe answered with a malformed DAP_Info response.":
         "探针对 DAP_Info 的应答格式错误。",
@@ -417,6 +424,8 @@ ZH = {
     "External SPI flash": "片外 SPI Flash",
 
     # ------------------------------------------------------------ FlashWorker
+    "The reset fell back to software: the probe's nRESET is not connected to the target. Select Software as the reset mode to skip this.":
+        "复位已退回软件复位：探针的 nRESET 没有接到目标。把复位方式改成「软件复位」可跳过这一步。",
     "Loading the flash algorithm ...": "正在加载下载算法 ...",
     "Algorithm %1: %2, %3, page %4 bytes, %5 sectors":
         "算法 %1：%2，%3，页 %4 字节，%5 个扇区",
@@ -446,6 +455,8 @@ ZH = {
     "Retrying at a slower clock ...": "正在以更低的时钟重试 ...",
 
     # --------------------------------------------------------------- Flasher
+    "The target did not reset through nRESET: the line is not connected. Continuing with a software reset - select Software as the reset mode to skip this.":
+        "目标没有通过 nRESET 复位：该引脚没有连接。已改用软件复位 —— 把复位方式改成「软件复位」可跳过这一步。",
     "The algorithm image is empty.": "算法映像为空。",
     "The algorithm reports an unusable page size (%1 bytes).":
         "算法报告的页大小不可用（%1 字节）。",

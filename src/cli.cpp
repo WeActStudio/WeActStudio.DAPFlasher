@@ -323,10 +323,21 @@ int cliRun(const QStringList &arguments)
                 err() << info.error << "\n";
                 return 1;
             }
+            const QString debugPort = describeDpIdCode(info.dpIdCode);
             out() << "Target: " << info.coreName << "\n"
                   << "CPUID: " << hex32(info.cpuid) << "\n"
-                  << "DP IDCODE: " << hex32(info.dpIdCode) << "\n"
-                  << "State: " << (info.halted ? "halted" : "running") << "\n";
+                  << "DP IDCODE: " << hex32(info.dpIdCode);
+            if (!debugPort.isEmpty())
+                out() << " (" << debugPort << ")";
+            out() << "\n";
+            if (info.mcu.known) {
+                out() << "MCU: " << info.mcu.device << " (" << info.mcu.vendor << ", device id "
+                      << hex32(info.mcu.deviceId) << ", rev " << hex32(info.mcu.revision) << ")\n";
+            } else if (info.mcu.deviceId != 0) {
+                out() << "MCU: unknown (device id " << hex32(info.mcu.deviceId) << " at "
+                      << hex32(info.mcu.idAddress) << ")\n";
+            }
+            out() << "State: " << (info.halted ? "halted" : "running") << "\n";
         }
 
         if (haltRequested) {

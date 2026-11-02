@@ -14,6 +14,7 @@ RU = {
 
     # ---------------------------------------------------------------------- CmsisDap
     "No probe is open.": "Нет открытого пробника.",
+    "The address 0x%1 is not word aligned.": "Адрес 0x%1 не выровнен по слову.",
     "The probe sent an empty answer.": "Пробник вернул пустой ответ.",
     "The probe answered with a malformed DAP_Info response.":
         "Пробник вернул некорректный ответ DAP_Info.",
@@ -177,6 +178,8 @@ RU = {
     "External SPI flash": "Внешняя SPI флеш-память",
 
     # ------------------------------------------------------------------- FlashWorker
+    "The reset fell back to software: the probe's nRESET is not connected to the target. Select Software as the reset mode to skip this.":
+        "Сброс выполнен программно: линия nRESET пробника не подключена к цели. Выберите программный сброс в настройках, чтобы не повторять это.",
     "Loading the flash algorithm ...": "Загрузка алгоритма программирования...",
     "Algorithm %1: %2, %3, page %4 bytes, %5 sectors":
         "Алгоритм %1: %2, %3, страница %4 байт, секторов %5",
@@ -208,6 +211,8 @@ RU = {
     "Retrying at a slower clock ...": "Повтор на более низкой частоте...",
 
     # ----------------------------------------------------------------------- Flasher
+    "The target did not reset through nRESET: the line is not connected. Continuing with a software reset - select Software as the reset mode to skip this.":
+        "Цель не была сброшена по линии nRESET: она не подключена. Продолжаем с программным сбросом — выберите программный сброс в настройках, чтобы не повторять это.",
     "The algorithm image is empty.": "Образ алгоритма пуст.",
     "The algorithm reports an unusable page size (%1 bytes).":
         "Алгоритм сообщает непригодный размер страницы (%1 байт).",
@@ -390,6 +395,12 @@ RU = {
     "%1  Size: %2 in %3 blocks  Address: 0x%4 - 0x%5  Checksum: 0x%6":
         "%1  Размер: %2 в %3 блоках  Адрес: 0x%4 - 0x%5  Контрольная сумма: 0x%6",
     "No Probe": "Нет пробника",
+    "Please Wait": "Подождите",
+    "Debug port: %1": "Порт отладки: %1",
+    "Vendor device id %1 at %2, revision %3":
+        "Идентификатор устройства %1 по адресу %2, версия %3",
+    "The target is still being identified. Try again in a moment.":
+        "Цель всё ещё определяется. Повторите попытку через мгновение.",
     "Select a debug probe first.": "Сначала выберите отладочный пробник.",
     "Halt Failed": "Сбой остановки",
     "The core is halted.": "Ядро остановлено.",

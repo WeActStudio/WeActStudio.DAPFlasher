@@ -45,6 +45,11 @@ pacman -S mingw-w64-x86_64-qt6-static mingw-w64-x86_64-hidapi mingw-w64-x86_64-l
 
 hidapi 和 libusb 都按静态库链接进 exe，产物不依赖任何 MSYS2 运行时 DLL，两个 exe 拷到任意目录即可运行。
 
+## 文档
+
+- [目标芯片识别](docs/mcu-identification_zh_CN.md) —— 怎么认出探针那头是哪颗芯片、
+  为什么只到子系列，以及怎么往 `mcu-ids.txt` 里加型号。
+
 ## 许可证
 
 本项目以 **GNU General Public License v3.0** 发布，全文见 [LICENSE](LICENSE)。

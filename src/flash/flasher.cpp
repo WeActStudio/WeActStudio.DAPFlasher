@@ -170,16 +170,28 @@ bool Flasher::downloadAlgorithm(const FlashAlgo &algo, const Layout &layout, QSt
                   return a.address < b.address;
               });
 
+    static const bool trace = qEnvironmentVariableIsSet("DAPFLASHER_TRACE");
+
     for (const ElfSegment &segment : segments) {
         const quint32 target = layout.loadBase + segment.address;
 
         if (segment.memSize > segment.fileSize) {
             const quint32 zeroSize = segment.memSize - segment.fileSize;
+            if (trace)
+                fprintf(stderr, "zero fill 0x%08x len=%u\n", target + segment.fileSize, zeroSize);
             if (!writeZeros(target + segment.fileSize, zeroSize, error))
                 return false;
         }
 
         if (!segment.data.isEmpty()) {
+            if (trace)
+                fprintf(stderr, "write seg 0x%08x len=%d first=%02x %02x %02x %02x (mem=%u file=%u)\n",
+                        target, static_cast<int>(segment.data.size()),
+                        static_cast<quint8>(segment.data.at(0)),
+                        static_cast<quint8>(segment.data.at(1)),
+                        static_cast<quint8>(segment.data.at(2)),
+                        static_cast<quint8>(segment.data.at(3)),
+                        segment.memSize, segment.fileSize);
             if (!link_->writeBytes(target, segment.data, error))
                 return false;
         }
@@ -720,11 +732,29 @@ bool Flasher::program(const Config &config, const QVector<FlashRange> &ranges,
         ResetMode used = config.resetMode;
 
         if (!core_->resetWithMode(config.resetMode, true, &used, resetError)) {
-            /* The reset is the rescue, and when it does not work the failure
-             * that is worth reporting is the halt the user asked for. */
-            error = resetError;
-            if (!core_->halt(error))
-                return false;
+            /* A hardware reset that did not reach the target is not a reason
+             * to fail the run - the software reset reaches the same state
+             * without a wire. It is, however, the one thing the user has to
+             * be told: the configuration says "hardware", and without the
+             * warning the only visible sign is a flash that was programmed
+             * without a reset in front of it. */
+            QString softwareError;
+
+            if (config.resetMode == ResetMode::Hardware
+                && core_->resetWithMode(ResetMode::Software, true, &used, softwareError)) {
+                stats.resetFellBack = true;
+                log(callbacks, QCoreApplication::translate("Flasher",
+                                   "The target did not reset through nRESET: the line is not connected. "
+                                   "Continuing with a software reset - select Software as the reset "
+                                   "mode to skip this."), true);
+            } else {
+                /* The reset is the rescue, and when it does not work the
+                 * failure that is worth reporting is the halt the user asked
+                 * for. */
+                error = softwareError.isEmpty() ? resetError : softwareError;
+                if (!core_->halt(error))
+                    return false;
+            }
         } else {
             log(callbacks, QCoreApplication::translate("Flasher", "Reset: %1").arg(resetModeName(used)));
         }
@@ -862,7 +892,20 @@ bool Flasher::program(const Config &config, const QVector<FlashRange> &ranges,
         ResetMode used = config.resetMode;
         QString resetError;
         if (!core_->resetWithMode(config.resetMode, false, &used, resetError)) {
-            log(callbacks, QCoreApplication::translate("Flasher", "Resetting the target failed: %1").arg(resetError), true);
+            /* Same fallback as the one before the erase, and the same reason:
+             * an nRESET that is not wired is a configuration problem, not a
+             * failed run. The warning itself was already printed once. */
+            QString softwareError;
+            if (config.resetMode == ResetMode::Hardware
+                && core_->resetWithMode(ResetMode::Software, false, &used, softwareError)) {
+                stats.resetFellBack = true;
+                log(callbacks, QCoreApplication::translate("Flasher", "Reset: %1").arg(resetModeName(used)));
+            } else {
+                /* The fallback's own message is the useful one when it has
+                 * one: "no nRESET" is already explained by the mode. */
+                log(callbacks, QCoreApplication::translate("Flasher", "Resetting the target failed: %1")
+                                   .arg(softwareError.isEmpty() ? resetError : softwareError), true);
+            }
         } else {
             log(callbacks, QCoreApplication::translate("Flasher", "Reset: %1").arg(resetModeName(used)));
         }

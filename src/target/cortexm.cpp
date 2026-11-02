@@ -406,6 +406,14 @@ bool CortexM::resetSoftware(bool haltAfterReset, QString &error)
         demcr &= ~kVecCoreReset;
         QString ignored;
         link_->writeMem32(kDemcr, &demcr, 1, ignored);
+
+        /* Clearing VC_CORERESET lets the core leave the reset vector again:
+         * C_HALT itself is cleared by the system reset, so the only thing that
+         * was holding the core was the vector catch. Without this write the
+         * core starts executing the old image and its startup code wipes the
+         * algorithm out of RAM. */
+        if (!writeDhcsr(kDbgKey | kCDebugEn | kCHalt, error))
+            return false;
     }
 
     if (haltAfterReset)
@@ -443,6 +451,19 @@ bool CortexM::resetHardware(bool haltAfterReset, bool *performed, QString &error
     }
 
     bool executed = false;
+
+    /* S_RESET_ST is sticky and cleared by the read itself, so it is read once
+     * before the pulse. After the pulse it then answers exactly one question:
+     * did this reset reach the core? A probe whose nRESET is not wired to the
+     * board acknowledges every DAP_SWJ_Pins write and the target never
+     * notices - "hardware reset" then silently resets nothing, and the flash
+     * is programmed on top of whatever state the core was left in. */
+    {
+        quint32 dhcsr = 0;
+        QString ignored;
+        (void)readDhcsr(dhcsr, ignored);
+    }
+
     const bool answered = link_->pulseTargetReset(&executed, error);
 
     /* Put the vector catch back whatever the pulse did */
@@ -457,6 +478,18 @@ bool CortexM::resetHardware(bool haltAfterReset, bool *performed, QString &error
     if (!executed) {
         /* Neither DAP_SWJ_Pins nor DAP_Reset_Target can drive a reset line on
          * this probe. Say so instead of pretending the target was reset. */
+        error = QCoreApplication::translate("CortexM", "The probe has no nRESET line; use the software reset instead.");
+        return false;
+    }
+
+    /* The answer above only says that the probe drove its own pin. Whether
+     * that pin reaches the target is a different question, and the one that
+     * matters. A failed DHCSR read is not evidence either way (the AP loses
+     * its power request across a real reset), so only a successful read that
+     * reports no reset is treated as "not connected". */
+    bool resetSeen = false;
+    QString statusError;
+    if (resetStatus(resetSeen, statusError) && !resetSeen) {
         error = QCoreApplication::translate("CortexM", "The probe has no nRESET line; use the software reset instead.");
         return false;
     }

@@ -71,16 +71,8 @@ EXE_NAME="WeAct Studio DAP Flasher.exe"
 CLI_PRO_FILE="WeActStudioDAPFlasher_CLI.pro"
 CLI_EXE_NAME="WeAct Studio DAP Flasher CLI.exe"
 
-# Where the object files go. A RAM disk is a lot faster than the source
-# volume for this, and nothing under the build directories has to survive a
-# reboot, so the RAM disk is used whenever it is mounted. Override with
-# DAP_BUILD_DIR / DAP_CLI_BUILD_DIR, or fall back to the source tree when
-# there is no RAM disk.
-if [ -z "${DAP_BUILD_DIR}" ] && [ -d /r ]; then
-    DAP_BUILD_DIR="/r/dapflasher-build/build"
-    DAP_CLI_BUILD_DIR="/r/dapflasher-build/build-cli"
-fi
-
+# Where the object files go: next to the sources. Override with DAP_BUILD_DIR /
+# DAP_CLI_BUILD_DIR when they have to live elsewhere.
 BUILD_DIR="${DAP_BUILD_DIR:-${SCRIPT_DIR}/build}"
 CLI_BUILD_DIR="${DAP_CLI_BUILD_DIR:-${SCRIPT_DIR}/build-cli}"
 
@@ -142,7 +134,10 @@ generate_translations()
 
     if [ -n "${PYTHON_BIN}" ] && [ -x "${LUPDATE_BIN}" ]; then
         echo "==> Updating the translation sources (lupdate) ..."
-        ( cd "${SCRIPT_DIR}" && "${LUPDATE_BIN}" -no-obsolete src -ts ${ts_args} ) \
+        # "-locations none": otherwise every edit that shifts a line rewrites the
+        # <location> of every message, and the four .ts files come back as a
+        # 200-line diff of pure line numbers.
+        ( cd "${SCRIPT_DIR}" && "${LUPDATE_BIN}" -no-obsolete -locations none src -ts ${ts_args} ) \
             || echo "Warning: lupdate failed, keeping the existing .ts"
         "${PYTHON_BIN}" "${SCRIPT_DIR_WIN}/tools/i18n_fill.py" "${SCRIPT_DIR_WIN}"
     else
@@ -202,29 +197,19 @@ fi
 qmake_fingerprint() { "${QMAKE_BIN}" -query QT_VERSION 2>/dev/null; }
 
 # ----------------------------------------------------------------------------
-#  .qmake.stash: the build directory has to have one, and it has to be made
-#  somewhere else.
+#  .qmake.stash caches the compiler probe (macros, default include and library
+#  paths), so it is Qt-version and toolchain specific, not project specific.
 #
-#  qmake probes the compiler on the first run in a build directory and caches
-#  the result (macros, default include and library paths) in .qmake.stash.
-#  The probe is written for cmd.exe - "g++ -E ... 2>NUL" - and it does NOT
-#  survive being run through MSYS2's /bin/sh: "2>NUL" is then read as a
-#  redirect to a file literally named NUL, the probe comes back empty, and
-#  qmake stops with
+#  The probe is cmd.exe syntax - "g++ -E ... 2>NUL" - and it fails silently when
+#  qmake cannot find an interpreter: the output comes back empty, exit code 0,
+#  and qmake stops with
 #
 #      Variable QMAKE_CXX.COMPILER_MACROS is not defined.
 #      Project ERROR: failed to parse default include paths from compiler output
 #
-#  A build directory that already carries a stash never runs the probe, which
-#  is why this stays hidden while the build directory lives on the source
-#  volume. It bites when the build directory is on the RAM disk that a reboot
-#  empties: the stash goes with it and every build after the reboot fails.
-#
-#  The stash is Qt-version and toolchain specific, not project specific, so a
-#  copy from the source tree's build directory is a valid substitute - the
-#  paths inside it point at the compiler, not at the project. Restore it when
-#  the RAM disk lost it, and let qmake regenerate it when the copy is absent
-#  as well.
+#  %COMSPEC% is exported above, which is what makes the probe work at all; a
+#  fresh build directory then simply recreates the stash (measured 2026-11-02).
+#  Copying one over from the source tree only saves the probe round trip.
 # ----------------------------------------------------------------------------
 RESTORE_SOURCE_DIRS="${DAP_BUILD_DIR:+${SCRIPT_DIR}/build} ${DAP_CLI_BUILD_DIR:+${SCRIPT_DIR}/build-cli}"
 
@@ -313,6 +298,10 @@ fi
 
 # The graphical program looks for the companion next to itself
 cp -f "${CLI_PATH}" "${BUILD_DIR}/${CLI_EXE_NAME}"
+
+# The target device id table ships next to the programs so it can be edited
+# without a rebuild. Without it the program falls back to its built-in list.
+cp -f "${SCRIPT_DIR}/mcu-ids.txt" "${BUILD_DIR}/mcu-ids.txt"
 
 echo
 echo "==> Build succeeded"

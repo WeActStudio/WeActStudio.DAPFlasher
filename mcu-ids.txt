@@ -1,0 +1,112 @@
+# WeAct Studio DAP Flasher - target device ids
+#
+# One line per device id, fields separated by '|':
+#     <register address> | <value> | <vendor> | <device name> [ | <mask> ]
+#
+# The mask is optional and defaults to 0xFFF (ST's 12 bit DEV_ID). Nordic's
+# part number is 20 bits wide (mask 0x1FFFF), Artery's code fills the whole
+# register (mask the range that identifies the family). The register is
+# compared as (value & mask) == (read & mask).
+#
+# '#' starts a comment. Addresses are probed in the order they appear here, so
+# put the ones that hit most often first. The file is read on every identify:
+# edit it and press Refresh in the window, no restart needed.
+#
+# Without this file the program falls back to a short built-in list (the parts
+# that turn up most often). See docs/mcu-identification.md.
+#
+# --- STM32 H7: register in the D3 domain --------------------------------
+0x5C001000 | 0x450 | STMicroelectronics | STM32H742/743/750/753
+0x5C001000 | 0x480 | STMicroelectronics | STM32H7A3/7B3
+0x5C001000 | 0x483 | STMicroelectronics | STM32H723/725/730/733/735
+#
+# --- STM32 F0 ------------------------------------------------------------
+0xE0042000 | 0x440 | STMicroelectronics | STM32F030x8/F05x
+0xE0042000 | 0x444 | STMicroelectronics | STM32F030x4/6
+0xE0042000 | 0x442 | STMicroelectronics | STM32F030xC/F09x
+0xE0042000 | 0x445 | STMicroelectronics | STM32F04x/F070x6
+0xE0042000 | 0x448 | STMicroelectronics | STM32F070xB/F071/F072
+#
+# --- STM32 F1 ------------------------------------------------------------
+0xE0042000 | 0x412 | STMicroelectronics | STM32F10x low density
+0xE0042000 | 0x410 | STMicroelectronics | STM32F10x medium density
+0xE0042000 | 0x414 | STMicroelectronics | STM32F10x high density
+0xE0042000 | 0x418 | STMicroelectronics | STM32F105/107
+0xE0042000 | 0x420 | STMicroelectronics | STM32F100 value line
+0xE0042000 | 0x428 | STMicroelectronics | STM32F100 high density
+0xE0042000 | 0x430 | STMicroelectronics | STM32F10x XL density
+#
+# --- STM32 F2 ------------------------------------------------------------
+0xE0042000 | 0x411 | STMicroelectronics | STM32F2xx
+#
+# --- STM32 F3 ------------------------------------------------------------
+0xE0042000 | 0x432 | STMicroelectronics | STM32F373/378
+0xE0042000 | 0x422 | STMicroelectronics | STM32F302/303/358
+0xE0042000 | 0x439 | STMicroelectronics | STM32F301/302x6/318
+0xE0042000 | 0x438 | STMicroelectronics | STM32F303x6/8, F334/328
+0xE0042000 | 0x446 | STMicroelectronics | STM32F302xD/E, F303xD/E, F398
+#
+# --- STM32 F4 ------------------------------------------------------------
+0xE0042000 | 0x413 | STMicroelectronics | STM32F405/407/415/417
+0xE0042000 | 0x419 | STMicroelectronics | STM32F42x/43x
+0xE0042000 | 0x423 | STMicroelectronics | STM32F401xB/C
+0xE0042000 | 0x433 | STMicroelectronics | STM32F401xD/E
+0xE0042000 | 0x458 | STMicroelectronics | STM32F410
+0xE0042000 | 0x431 | STMicroelectronics | STM32F411
+0xE0042000 | 0x441 | STMicroelectronics | STM32F412
+0xE0042000 | 0x421 | STMicroelectronics | STM32F446
+0xE0042000 | 0x434 | STMicroelectronics | STM32F469/479
+0xE0042000 | 0x463 | STMicroelectronics | STM32F413/423
+#
+# --- STM32 F7 ------------------------------------------------------------
+0xE0042000 | 0x449 | STMicroelectronics | STM32F74x/75x
+0xE0042000 | 0x451 | STMicroelectronics | STM32F76x/77x
+0xE0042000 | 0x452 | STMicroelectronics | STM32F72x/73x
+#
+# --- STM32 L0 ------------------------------------------------------------
+0xE0042000 | 0x457 | STMicroelectronics | STM32L01x/02x
+0xE0042000 | 0x425 | STMicroelectronics | STM32L031/041
+0xE0042000 | 0x417 | STMicroelectronics | STM32L05x/06x
+0xE0042000 | 0x447 | STMicroelectronics | STM32L07x/08x
+#
+# --- STM32 L1 ------------------------------------------------------------
+0xE0042000 | 0x416 | STMicroelectronics | STM32L1xx medium density
+0xE0042000 | 0x429 | STMicroelectronics | STM32L1xx medium density +
+0xE0042000 | 0x427 | STMicroelectronics | STM32L1xx category 2
+0xE0042000 | 0x436 | STMicroelectronics | STM32L1xx high density
+0xE0042000 | 0x437 | STMicroelectronics | STM32L1xx XL density
+#
+# --- STM32 L4 ------------------------------------------------------------
+0xE0042000 | 0x415 | STMicroelectronics | STM32L47x/48x
+0xE0042000 | 0x435 | STMicroelectronics | STM32L43x/44x
+0xE0042000 | 0x462 | STMicroelectronics | STM32L45x/46x
+0xE0042000 | 0x461 | STMicroelectronics | STM32L496/4A6
+0xE0042000 | 0x470 | STMicroelectronics | STM32L4Rx/4Sx
+0xE0042000 | 0x471 | STMicroelectronics | STM32L4P5/Q5
+#
+# --- STM32 G0 / G4 -------------------------------------------------------
+0xE0042000 | 0x460 | STMicroelectronics | STM32G0x1
+0xE0042000 | 0x466 | STMicroelectronics | STM32G03x/04x
+0xE0042000 | 0x468 | STMicroelectronics | STM32G431/441
+0xE0042000 | 0x469 | STMicroelectronics | STM32G47x/48x
+0xE0042000 | 0x479 | STMicroelectronics | STM32G491/4A1
+#
+# --- STM32 U5 ------------------------------------------------------------
+0xE0042000 | 0x482 | STMicroelectronics | STM32U535/545/575/585
+#
+# --- Nordic nRF52: FICR.INFO.PART at 0x10000100, 20 bit part code --------
+0x10000100 | 0x52840 | Nordic Semiconductor | nRF52840 | 0x1FFFF
+0x10000100 | 0x52833 | Nordic Semiconductor | nRF52833 | 0x1FFFF
+0x10000100 | 0x52832 | Nordic Semiconductor | nRF52832 | 0x1FFFF
+0x10000100 | 0x52820 | Nordic Semiconductor | nRF52820 | 0x1FFFF
+0x10000100 | 0x52811 | Nordic Semiconductor | nRF52811 | 0x1FFFF
+0x10000100 | 0x52810 | Nordic Semiconductor | nRF52810 | 0x1FFFF
+#
+# --- Artery AT32: DEBUG_IDCODE at 0xE0042000 -----------------------------
+# The low 16 bits carry capacity and package (e.g. 0x70050242 = AT32F403ARCT7),
+# so only the family range is matched here.
+0xE0042000 | 0x70050000 | Artery | AT32F403A/407 | 0xFFFF0000
+#
+# GD32 is deliberately absent: its DBG_ID sits at the same address and carries
+# the same values as the STM32 part it replaces, so a GD32F303 answers 0x413
+# just like an STM32F405. Claiming one or the other would be a coin flip.

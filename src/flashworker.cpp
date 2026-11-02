@@ -37,6 +37,17 @@ QString hex32(quint32 value)
 const quint32 kCommandLineClock = 1000000u;
 
 /**
+ * The clock the first retry goes to.
+ *
+ * Measured on this probe: at 10 MHz a few runs out of twenty die with an SWD
+ * fault on an AP access, at a random point (during the erase, during a page),
+ * while 8 MHz never failed in any measurement and costs 0.07 s on a 116 KB
+ * image. Dropping straight to 1 MHz after a failure turns a 4 s run into a 9 s
+ * one for no reason, so the retry steps one notch down instead.
+ */
+const quint32 kRetryClock = 8000000u;
+
+/**
  * One complete attempt.
  *
  * @param onAir   set when the probe was opened, i.e. when the failure came
@@ -265,6 +276,16 @@ ProgramResult runSession(const FlashRequest &request,
              .arg(result.statistics.ramBytesUsed)
              .arg(hex32(result.statistics.ramBase)));
 
+    /* The window shows this summary in its completion dialog, which is seen
+     * even when the log is not - and the reset mode is a setting the user has
+     * to change once, so it is worth repeating there. */
+    if (result.statistics.resetFellBack) {
+        result.message += QString(QStringLiteral("\n\n"))
+                          + QCoreApplication::translate("FlashWorker",
+                                "The reset fell back to software: the probe's nRESET is not connected "
+                                "to the target. Select Software as the reset mode to skip this.");
+    }
+
     link.close();
     return result;
 }
@@ -280,9 +301,10 @@ ProgramResult runProgramSession(const FlashRequest &request,
     const ProgramResult result = runSession(request, progress, log, cancelled, &onAir);
 
     /* Only a run that started faster than the command line's own clock is
-     * repeated, and then at exactly that clock. A run the command line would
-     * fail at as well is reported straight away: repeating it would only make
-     * the window slower than the command line, not better. */
+     * repeated, and then slower - see kRetryClock for why one notch and not
+     * straight to the bottom. A run the command line would fail at as well is
+     * reported straight away: repeating it would only make the window slower
+     * than the command line, not better. */
     if (result.ok || !onAir || request.clockHz <= kCommandLineClock)
         return result;
 
@@ -292,11 +314,20 @@ ProgramResult runProgramSession(const FlashRequest &request,
 
     const FlashRequest retry = [&request]() {
         FlashRequest copy = request;
-        copy.clockHz = kCommandLineClock;
+        copy.clockHz = qMin(request.clockHz, kRetryClock);
+        /* Already at or below the first step: this is the last try, and it is
+         * the clock the command line uses. */
+        if (copy.clockHz >= request.clockHz)
+            copy.clockHz = kCommandLineClock;
         return copy;
     }();
 
     if (log) {
+        /* The reason first: "the link failed" alone cannot be acted on, and a
+         * retry that silently succeeds hides which command gave up. */
+        if (!result.message.isEmpty())
+            log(result.message, true);
+
         log(QCoreApplication::translate("FlashWorker", "The SWD link failed at %1; retrying at %2.")
                 .arg(CmsisDap::clockText(request.clockHz), CmsisDap::clockText(retry.clockHz)),
             true);

@@ -49,6 +49,7 @@ SOURCES += \
     src/dap/daptransport.cpp \
     src/dap/cmsisdap.cpp \
     src/target/cortexm.cpp \
+    src/target/mcudb.cpp \
     src/target/resetmode.cpp \
     src/flash/elffile.cpp \
     src/flash/flashalgo.cpp \
@@ -65,6 +66,7 @@ HEADERS += \
     src/dap/daptransport.h \
     src/dap/cmsisdap.h \
     src/target/cortexm.h \
+    src/target/mcudb.h \
     src/target/resetmode.h \
     src/flash/elffile.h \
     src/flash/flashalgo.h \

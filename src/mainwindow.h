@@ -90,6 +90,9 @@ private:
     void saveSettings();
 
     void refreshProbeList();
+
+    /* Asks for a fresh identify of the probe on screen. Never blocks: the
+     * work goes to identifyTargetAsync(). */
     void identifyTarget();
 
     /* Quiet counterpart of identifyTarget(), used after a programming run to
@@ -97,7 +100,7 @@ private:
      * writes nothing to the log - see targetIdentifyQuiet() for why. */
     void refreshTargetStatus();
 
-    /* Start-up runs the very same identify, off the GUI thread.
+    /* Runs the identify off the GUI thread.
      *
      * A target whose own program holds the SWD interface makes attachSwd()
      * walk its whole recovery ladder - resets, retries and a power-up poll
@@ -106,10 +109,18 @@ private:
      * start-up. The list is filled synchronously; only the identify moves to
      * a thread, and its result comes back through a queued call.
      *
-     * A second request while one is in flight is ignored: the answer for the
-     * probe selected at the time is already on its way. */
+     * Two sessions must never run on one probe at the same time, so a request
+     * that arrives while one is in flight is queued and started when that one
+     * finishes: it then reads whatever probe is selected by that time. */
     void identifyTargetAsync();
-    void onTargetIdentified(const TargetInfo &info, const QString &error);
+    void onTargetIdentified(const TargetInfo &info, const QString &error,
+                            const QString &probeKey);
+
+    /* One probe, one session. Every action that opens its own session asks
+     * this first: the identify thread holds the interface while it runs, so a
+     * second open would come back as a busy probe for no good reason. Returns
+     * true - after saying so - when the caller has to give up. */
+    bool warnIfIdentifying();
 
     /* The algorithm list is filled from a cache so that the start-up does not
      * have to walk the CMSIS packs; refreshAlgorithmList() rescans in the
@@ -246,6 +257,7 @@ private:
     QThread *workerThread_;
     QThread *algoScanThread_;
     QThread *identifyThread_;
+    bool identifyPending_;
     bool flashing_;
     bool cancelled_;
 

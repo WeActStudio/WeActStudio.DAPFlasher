@@ -14,6 +14,7 @@ ES = {
 
     # ---------------------------------------------------------------------- CmsisDap
     "No probe is open.": "No hay ninguna sonda abierta.",
+    "The address 0x%1 is not word aligned.": "La dirección 0x%1 no está alineada a palabra.",
     "The probe sent an empty answer.": "La sonda devolvió una respuesta vacía.",
     "The probe answered with a malformed DAP_Info response.":
         "La sonda devolvió una respuesta DAP_Info mal formada.",
@@ -196,6 +197,8 @@ ES = {
     "External SPI flash": "Memoria flash SPI externa",
 
     # ------------------------------------------------------------------- FlashWorker
+    "The reset fell back to software: the probe's nRESET is not connected to the target. Select Software as the reset mode to skip this.":
+        "El reinicio se hizo por software: la línea nRESET de la sonda no está conectada al destino. Seleccione Software como modo de reinicio para omitir esto.",
     "Loading the flash algorithm ...": "Cargando el algoritmo de programación...",
     "Algorithm %1: %2, %3, page %4 bytes, %5 sectors":
         "Algoritmo %1: %2, %3, página de %4 bytes, %5 sectores",
@@ -228,6 +231,8 @@ ES = {
     "Retrying at a slower clock ...": "Reintentando con una frecuencia más baja...",
 
     # ----------------------------------------------------------------------- Flasher
+    "The target did not reset through nRESET: the line is not connected. Continuing with a software reset - select Software as the reset mode to skip this.":
+        "El destino no se reinició por nRESET: la línea no está conectada. Se continúa con un reinicio por software; seleccione Software como modo de reinicio para omitir esto.",
     "The algorithm image is empty.": "La imagen del algoritmo está vacía.",
     "The algorithm reports an unusable page size (%1 bytes).":
         "El algoritmo indica un tamaño de página no utilizable (%1 bytes).",
@@ -415,6 +420,12 @@ ES = {
         "%1  Tamaño: %2 en %3 bloques  Dirección: 0x%4 - 0x%5  Suma de "
         "comprobación: 0x%6",
     "No Probe": "Sin sonda",
+    "Please Wait": "Espere",
+    "Debug port: %1": "Puerto de depuración: %1",
+    "Vendor device id %1 at %2, revision %3":
+        "ID de dispositivo %1 en %2, revisión %3",
+    "The target is still being identified. Try again in a moment.":
+        "El destino aún se está identificando. Inténtelo de nuevo en un momento.",
     "Select a debug probe first.": "Seleccione primero una sonda de depuración.",
     "Halt Failed": "Error al detener",
     "The core is halted.": "El núcleo está detenido.",

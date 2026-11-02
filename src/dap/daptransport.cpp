@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+#include <cstdio>
 #include "daptransport.h"
 #include "dapdefs.h"
 #include "probes.h"
@@ -547,6 +548,19 @@ protected:
         }
 
         int transferred = 0;
+
+        /* Debug: dump what actually goes to libusb, not the QByteArray above.
+         * Read once - this runs for every command the tool sends. */
+        static const bool trace = qEnvironmentVariableIsSet("DAPFLASHER_TRACE");
+
+        if (trace && command.size() > 8) {
+            const unsigned char *p = reinterpret_cast<const unsigned char *>(frame.constData());
+            fprintf(stderr, "frame size=%d head=%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+                    static_cast<int>(frame.size()),
+                    p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
+                    p[8], p[9], p[10], p[11]);
+        }
+
         const int rc = libusb_bulk_transfer(
             handle_,
             epOut_,
@@ -559,6 +573,11 @@ protected:
             error = QCoreApplication::translate("DapTransport", "USB bulk write failed: %1")
                         .arg(libusbErrorText(rc));
             return false;
+        }
+
+        /* Debug: a short write leaves the probe with a truncated command. */
+        if (trace) {
+            fprintf(stderr, "out %d -> transferred %d\n", static_cast<int>(frame.size()), transferred);
         }
 
         return true;

@@ -14,14 +14,24 @@
 #include "probes.h"
 
 #include <QCoreApplication>
+#include <QFile>
 #include <QThread>
 
+#include <cstdio>
 #include <cstring>
 
 namespace {
 
 /* Response timeout of one command, in milliseconds */
 const int kCommandTimeoutMs = 2000;
+
+/** DAPFLASHER_TRACE: print what goes over the wire. Read once, because it is
+ *  asked on every block during a flash. */
+bool tracingEnabled()
+{
+    static const bool on = qEnvironmentVariableIsSet("DAPFLASHER_TRACE");
+    return on;
+}
 
 /* AHB-AP control/status word: 32 bit access, single address increment,
  * privileged and non secure access - the combination every CMSIS-DAP host
@@ -196,6 +206,12 @@ bool CmsisDap::exchange(const QByteArray &command, QByteArray &response, QString
         return false;
     }
 
+    /* Debug hook: DAPFLASHER_DELAY_MS adds a gap before each command, to test
+     * whether back-to-back commands are what a probe chokes on. */
+    static const int delayMs = qEnvironmentVariableIntValue("DAPFLASHER_DELAY_MS");
+    if (delayMs > 0)
+        QThread::msleep(static_cast<unsigned long>(delayMs));
+
     if (!transport_->sendCommand(command, error))
         return false;
 
@@ -205,6 +221,18 @@ bool CmsisDap::exchange(const QByteArray &command, QByteArray &response, QString
     if (response.isEmpty()) {
         error = QCoreApplication::translate("CmsisDap", "The probe sent an empty answer.");
         return false;
+    }
+
+    /* Debug hook: DAPFLASHER_TRACE=<file> logs every command and response. */
+    static const QByteArray tracePath = qgetenv("DAPFLASHER_TRACE");
+    if (!tracePath.isEmpty()) {
+        QFile trace(QString::fromLocal8Bit(tracePath));
+        if (trace.open(QIODevice::Append | QIODevice::Text)) {
+            trace.write(command.toHex(' '));
+            trace.write("  ->  ");
+            trace.write(response.toHex(' '));
+            trace.write("\n");
+        }
     }
 
     return true;
@@ -925,8 +953,35 @@ bool CmsisDap::clearStickyErrors(QString &error)
      * on JTAG. The reason is the power bits: CTRL/STAT also carries
      * CDBGPWRUPREQ and CSYSPWRUPREQ, so writing a computed "clear the
      * errors" value into it is one wrong mask away from switching a domain
-     * off. ABORT has no such bit, so this cannot go wrong. */
-    return swdWriteDp(kDpAbort, kAbortClearAll, error);
+     * off. ABORT has no such bit, so this cannot go wrong.
+     *
+     * Deliberately not swdWriteDp(): that goes through transfer(), whose
+     * FAULT handler calls this method, so a DP that faults on ABORT as well
+     * recursed until the thread ran out of stack. That is the start-up crash
+     * on a target whose SWD link answers but refuses every DP write. */
+    return writeDpAbortOnce(error);
+}
+
+bool CmsisDap::writeDpAbortOnce(QString &error)
+{
+    QByteArray command;
+    command.append(static_cast<char>(DapCmd::Transfer));
+    command.append(static_cast<char>(0));                       /* DAP index */
+    command.append(static_cast<char>(1));
+    command.append(static_cast<char>(kDpAbort & 0x0C));
+    appendLe32(command, kAbortClearAll);
+
+    QByteArray response;
+    if (!exchange(command, response, error))
+        return false;
+
+    if (response.size() < 3 || static_cast<quint8>(response.at(0)) != DapCmd::Transfer) {
+        error = QCoreApplication::translate("CmsisDap", "The probe answered with a malformed DAP_Transfer response.");
+        return false;
+    }
+
+    return !(static_cast<quint8>(response.at(2))
+             & (DapTransferResult::Fault | DapTransferResult::Error));
 }
 
 /* ==========================================================================
@@ -1155,6 +1210,15 @@ bool CmsisDap::readMem32(quint32 address, quint32 *values, int count, QString &e
     if (count <= 0)
         return true;
 
+    /* The split below subtracts the offset inside the 1 KB page; an address
+     * that is not on a word boundary makes that zero, and the caller would be
+     * told "Empty block transfer" instead of what is actually wrong. */
+    if ((address & 0x3u) != 0) {
+        error = QCoreApplication::translate("CmsisDap", "The address 0x%1 is not word aligned.")
+                    .arg(address, 8, 16, QLatin1Char('0'));
+        return false;
+    }
+
     /* The AP bank has to be known before any AP register is touched, and the
      * only way to know it is to have written it in this session. */
     if (!selectApBank(0, 0, error))
@@ -1169,13 +1233,13 @@ bool CmsisDap::readMem32(quint32 address, quint32 *values, int count, QString &e
     int done = 0;
     while (done < count) {
         /* A DAP_TransferBlock advances the address itself, but the AHB-AP
-         * wraps that auto-increment at a 4 KB page boundary: the word that
-         * belongs at 0x...1000 comes back from 0x...0000 instead (measured on
-         * this target with a 1064 word block four kilobytes into RAM, which
-         * landed on top of the first 272 bytes). A block must never cross a
-         * page. */
+         * wraps that auto-increment at a 1 KB boundary: measured on an
+         * STM32H743, a block starting at 0x200003E0 with 126 words wrapped at
+         * 0x20000400 and put its 9th word at 0x20000000, wiping the data
+         * written there earlier. The wrap is 1 KB on this part (a 4 KB guard
+         * is not enough). A block must never cross the boundary. */
         const quint32 blockAddress = address + static_cast<quint32>(done) * 4u;
-        const int pageWords = static_cast<int>((0x1000u - (blockAddress & 0xFFFu)) / 4u);
+        const int pageWords = qMax(1, static_cast<int>((0x400u - (blockAddress & 0x3FFu)) / 4u));
         const int chunk = qMin(qMin(count - done, blockWords), pageWords);
 
         /* Every block starts with its own TAR write, so a firmware that does
@@ -1406,6 +1470,12 @@ bool CmsisDap::writeMem32(quint32 address, const quint32 *values, int count, QSt
     if (count <= 0)
         return true;
 
+    if ((address & 0x3u) != 0) {
+        error = QCoreApplication::translate("CmsisDap", "The address 0x%1 is not word aligned.")
+                    .arg(address, 8, 16, QLatin1Char('0'));
+        return false;
+    }
+
     /* The contiguous case is a batch of count words, each one 4 bytes after
      * the last, and a single DAP_TransferBlock per 4 KB page - not one
      * command per word. That is why this is not a call to writeMem32Batch()
@@ -1426,7 +1496,7 @@ bool CmsisDap::writeMem32(quint32 address, const quint32 *values, int count, QSt
          * the auto-increment at the boundary and the tail of the block then
          * lands at the start of the page. */
         const quint32 blockAddress = address + static_cast<quint32>(done) * 4u;
-        const int pageWords = static_cast<int>((0x1000u - (blockAddress & 0xFFFu)) / 4u);
+        const int pageWords = qMax(1, static_cast<int>((0x400u - (blockAddress & 0x3FFu)) / 4u));
         const int chunk = qMin(qMin(count - done, blockWords), pageWords);
 
         /* Each block sets its own start address */
@@ -1516,6 +1586,13 @@ bool CmsisDap::writeBytes(quint32 address, const QByteArray &data, QString &erro
         const int shift = ((lead + i) % 4) * 8;
         buffer[word] = (buffer[word] & ~(0xFFu << shift))
                        | (static_cast<quint32>(static_cast<quint8>(data.at(i))) << shift);
+    }
+
+    if (tracingEnabled()) {
+        fprintf(stderr, "writeBytes addr=0x%08x size=%d words=%d lead=%d b0=%08x b126=%08x\n",
+                address, static_cast<int>(data.size()), words, lead,
+                static_cast<unsigned>(buffer[0]),
+                words > 126 ? static_cast<unsigned>(buffer[126]) : 0u);
     }
 
     return writeMem32(aligned, buffer.constData(), words, error);

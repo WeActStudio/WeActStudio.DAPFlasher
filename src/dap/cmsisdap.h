@@ -269,6 +269,10 @@ private:
                        const QByteArray &writeData, QByteArray &readData,
                        quint8 *transferResponse, QString &error);
 
+    /** DP ABORT write that does not go through transfer(): its FAULT handler
+     *  calls clearStickyErrors(), which is what needs this write. */
+    bool writeDpAbortOnce(QString &error);
+
     /**
      * Request the debug and the system power domain of the DP.
      *

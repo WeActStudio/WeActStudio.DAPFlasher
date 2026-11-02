@@ -55,6 +55,11 @@ pacman -S mingw-w64-x86_64-qt6-static mingw-w64-x86_64-hidapi mingw-w64-x86_64-l
 hidapi and libusb are linked statically, so the executables depend on no MSYS2
 runtime DLL; copying the two `.exe` files anywhere is enough.
 
+## Documentation
+
+- [Target identification](docs/mcu-identification.md) - how the chip behind the probe is
+  identified, why it stops at the sub-family, and how to add a part to `mcu-ids.txt`.
+
 ## License
 
 Released under the **GNU General Public License v3.0**; the full text is in

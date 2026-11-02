@@ -20,6 +20,7 @@
 
 #include <functional>
 
+#include "target/mcudb.h"
 #include "target/resetmode.h"
 
 struct DapProbeInfo;
@@ -38,6 +39,9 @@ struct TargetInfo
     quint16 probeProductId = 0;
     quint32 cpuid = 0;
     QString coreName;
+    /* Which chip answers, when the vendor device id was readable. The core
+     * name alone cannot tell an H743 from an H750 - both are a Cortex-M7. */
+    McuIdentity mcu;
     bool halted = false;
     quint32 dpIdCode = 0;
 };

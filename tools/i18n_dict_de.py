@@ -14,6 +14,7 @@ DE = {
 
     # ---------------------------------------------------------------------- CmsisDap
     "No probe is open.": "Es ist keine Probe geöffnet.",
+    "The address 0x%1 is not word aligned.": "Die Adresse 0x%1 ist nicht wortausgerichtet.",
     "The probe sent an empty answer.": "Die Probe hat eine leere Antwort gesendet.",
     "The probe answered with a malformed DAP_Info response.":
         "Die Probe hat eine fehlerhafte DAP_Info-Antwort gesendet.",
@@ -199,6 +200,8 @@ DE = {
     "External SPI flash": "Externer SPI-Flash",
 
     # ------------------------------------------------------------------- FlashWorker
+    "The reset fell back to software: the probe's nRESET is not connected to the target. Select Software as the reset mode to skip this.":
+        "Der Reset erfolgte per Software: die nRESET-Leitung der Probe ist nicht mit dem Ziel verbunden. Wählen Sie Software als Reset-Modus, um das zu überspringen.",
     "Loading the flash algorithm ...": "Flash-Algorithmus wird geladen...",
     "Algorithm %1: %2, %3, page %4 bytes, %5 sectors":
         "Algorithmus %1: %2, %3, Seite %4 Byte, %5 Sektoren",
@@ -232,6 +235,8 @@ DE = {
     "Retrying at a slower clock ...": "Neuer Versuch mit langsamerem Takt...",
 
     # ----------------------------------------------------------------------- Flasher
+    "The target did not reset through nRESET: the line is not connected. Continuing with a software reset - select Software as the reset mode to skip this.":
+        "Das Ziel wurde nicht über nRESET zurückgesetzt: die Leitung ist nicht verbunden. Es wird mit einem Software-Reset fortgefahren – wählen Sie Software als Reset-Modus, um das zu überspringen.",
     "The algorithm image is empty.": "Das Algorithmus-Abbild ist leer.",
     "The algorithm reports an unusable page size (%1 bytes).":
         "Der Algorithmus meldet eine unbrauchbare Seitengröße (%1 Byte).",
@@ -421,6 +426,12 @@ DE = {
     "%1  Size: %2 in %3 blocks  Address: 0x%4 - 0x%5  Checksum: 0x%6":
         "%1  Größe: %2 in %3 Blöcken  Adresse: 0x%4 - 0x%5  Prüfsumme: 0x%6",
     "No Probe": "Keine Probe",
+    "Please Wait": "Bitte warten",
+    "Debug port: %1": "Debug-Port: %1",
+    "Vendor device id %1 at %2, revision %3":
+        "Geräte-ID %1 unter %2, Revision %3",
+    "The target is still being identified. Try again in a moment.":
+        "Das Ziel wird noch erkannt. Versuchen Sie es gleich noch einmal.",
     "Select a debug probe first.": "Wählen Sie zuerst eine Debug-Probe.",
     "Halt Failed": "Anhalten fehlgeschlagen",
     "The core is halted.": "Der Kern ist angehalten.",

@@ -39,6 +39,10 @@ struct FlashStatistics
     quint32 bytesProgrammed = 0;
     quint32 ramBytesUsed = 0;
     quint32 ramBase = 0;
+
+    /** The configured hardware reset never reached the target (no nRESET
+     *  wire) and the run continued with a software reset. */
+    bool resetFellBack = false;
 };
 
 /** Callbacks of a running program operation */
