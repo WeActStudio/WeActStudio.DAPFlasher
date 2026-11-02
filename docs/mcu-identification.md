@@ -68,8 +68,8 @@ STM32H743ZIT6 and the STM32H750VBT6 alike - package, pin count and flash size ar
 - Pin count and package are not exposed anywhere - only the marking or the project files
   know them.
 
-That is why the window shows `STM32H743/753 (Cortex-M7)`: sub-family, with the core in
-brackets.
+That is why the window shows `STM32H742/743/750/753 (Cortex-M7)`: sub-family, with the
+core in brackets.
 
 ## Why the flash algorithm is not the source
 
@@ -86,8 +86,8 @@ Two problems with using it:
 2. There is no algorithm name before the user picks an algorithm, and identifying the
    target is exactly what happens before that.
 
-The other direction is useful: the sub-family cross-checks the algorithm. `STM32H743/753`
-together with `STM32H7x_1024` means the wrong size was picked.
+The other direction is useful: the sub-family cross-checks the algorithm.
+`STM32H742/743/750/753` together with `STM32H7x_1024` means the wrong size was picked.
 
 ## Debug port id (DP IDCODE)
 
@@ -104,11 +104,12 @@ DPIDR:
 Measured on this H743: `0x6BA02477` -> `SW-DP v2, ARM, part 0x02`. An older Cortex-M3/M4
 target answers `0x2BA01477` -> `SW-DP v1, ARM, part 0x01`.
 
-**It cannot identify the part** - every part of a family with the same core generation
-returns the same value. What it answers is "what is on the other end of this wire": a
-designer other than `0x23B`, or a part number outside 0x01/0x02, means the target is not
-a plain SW-DP (a JTAG-DP, or nothing wired correctly) - which is worth knowing before
-reading any memory.
+**It cannot identify the part** - it describes the SW-DP implementation, not the silicon
+behind it. Two parts whose debug port is the same SW-DP version answer with the same
+value: many Cortex-M3/M4 parts give `0x2BA01477`, this H7 gives `0x6BA02477`. What it
+answers is "what is on the other end of this wire": a designer other than `0x23B`, or a
+part number outside 0x01/0x02, means the target is not a plain SW-DP (a JTAG-DP, or
+nothing wired correctly) - which is worth knowing before reading any memory.
 
 Code: `describeDpIdCode()` in `src/target/mcudb.cpp`. The command line puts it right
 after `DP IDCODE:`; the window shows it in the hover text of the "Target" row
