@@ -23,12 +23,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "WeAct Studio"
             VALUE "FileDescription", "WeAct Studio DAP Flasher"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "1.0.1.0"
             VALUE "InternalName", "WeAct Studio DAP Flasher"
             VALUE "LegalCopyright", "Copyright (C) 2026 WeAct Studio"
             VALUE "OriginalFilename", "WeAct Studio DAP Flasher.exe"
             VALUE "ProductName", "WeAct Studio DAP Flasher"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "1.0.1.0"
         END
     END
     BLOCK "VarFileInfo"

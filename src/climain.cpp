@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     QCoreApplication::setApplicationName(QStringLiteral("WeAct Studio DAP Flasher CLI"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("1.0.0"));
+    QCoreApplication::setApplicationVersion(QStringLiteral("1.0.1"));
     QCoreApplication::setOrganizationName(QStringLiteral("WeActStudio"));
 
     QStringList arguments;

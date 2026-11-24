@@ -18,7 +18,7 @@ TEMPLATE = app
 # Executable name
 TARGET   = "WeAct Studio DAP Flasher"
 
-VERSION  = 1.0.0
+VERSION  = 1.0.1
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 CONFIG  -= debug_and_release debug_and_release_target

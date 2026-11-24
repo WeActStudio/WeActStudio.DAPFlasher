@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     QApplication::setApplicationName(QStringLiteral("WeAct Studio DAP Flasher"));
-    QApplication::setApplicationVersion(QStringLiteral("1.0.0"));
+    QApplication::setApplicationVersion(QStringLiteral("1.0.1"));
     QApplication::setOrganizationName(QStringLiteral("WeActStudio"));
 
     QStringList arguments;
