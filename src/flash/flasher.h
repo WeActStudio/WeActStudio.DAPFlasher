@@ -105,6 +105,15 @@ private:
                        int timeoutMs, quint32 arg0, quint32 arg1, quint32 arg2,
                        quint32 &result, QString &error);
 
+    /* Init()/UnInit() around one CMSIS step (erase=1, program=2, verify=3).
+     * initAlgorithm() retries from a fresh download; UnInit() failures are only
+     * logged, they never turn a completed operation into a failure. */
+    bool initAlgorithm(const FlashAlgo &algo, const Layout &layout,
+                       quint32 clockHz, quint32 fnc,
+                       const FlasherCallbacks &callbacks, QString &error);
+    void uninitAlgorithm(const FlashAlgo &algo, const Layout &layout,
+                         quint32 fnc, const FlasherCallbacks &callbacks);
+
     bool eraseFlash(const FlashAlgo &algo, const Layout &layout,
                     const QVector<FlashRange> &ranges, const Config &config,
                     const FlasherCallbacks &callbacks, FlashStatistics &stats, QString &error);

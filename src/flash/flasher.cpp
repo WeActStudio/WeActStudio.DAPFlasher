@@ -36,6 +36,11 @@ const int kDownloadAttempts = 3;
 /* Zero fill is written in chunks so that one DAP command stays reasonable */
 const int kZeroChunk = 1024;
 
+/* fnc argument of Init()/UnInit(): the CMSIS step being set up */
+const quint32 kFncErase = 1;
+const quint32 kFncProgram = 2;
+const quint32 kFncVerify = 3;
+
 /* Timeouts, in milliseconds */
 const int kInitTimeout = 5000;
 const int kInitAttempts = 2;
@@ -336,6 +341,70 @@ bool Flasher::callAlgorithm(const FlashAlgo &algo, const Layout &layout, const Q
     return true;
 }
 
+bool Flasher::initAlgorithm(const FlashAlgo &algo, const Layout &layout,
+                            quint32 clockHz, quint32 fnc,
+                            const FlasherCallbacks &callbacks, QString &error)
+{
+    /* A target that is running its own program can take the debug access back
+     * between the halt and the call, and the core then never reaches the
+     * algorithm: Init() times out with the core sitting in whatever the target
+     * firmware was doing. Nothing about that state is broken, it is only
+     * stale, so the whole start-up sequence is rebuilt and the call is made
+     * once more before the session is given up. */
+    for (int attempt = 1; attempt <= kInitAttempts; ++attempt) {
+        if (attempt > 1) {
+            log(callbacks, QCoreApplication::translate("Flasher",
+                               "Init() did not complete, restarting the algorithm (%1 of %2): %3")
+                               .arg(attempt)
+                               .arg(kInitAttempts)
+                               .arg(error), true);
+
+            /* Halt first: it is the state the retry starts from, and the halt
+             * is also what clears a MASKINTS that a previous release left
+             * behind on a running core. */
+            QString haltError;
+            if (!core_->halt(haltError)) {
+                error = haltError;
+                return false;
+            }
+
+            /* The RAM image is re-downloaded as well. A core that ran free for
+             * a moment may have written over it, and a stale copy fails in a
+             * way that looks random rather than diagnosable. */
+            if (!downloadAlgorithm(algo, layout, error))
+                return false;
+        }
+
+        quint32 result = 0;
+        if (callAlgorithm(algo, layout, QStringLiteral("Init"), kInitTimeout,
+                          algo.info().deviceAddress, clockHz, fnc, result, error)) {
+            if (result == 0)
+                return true;
+            error = QCoreApplication::translate("Flasher", "Init() failed with code %1.").arg(result);
+        }
+    }
+
+    return false;
+}
+
+void Flasher::uninitAlgorithm(const FlashAlgo &algo, const Layout &layout,
+                              quint32 fnc, const FlasherCallbacks &callbacks)
+{
+    if (!algo.hasFunction(QStringLiteral("UnInit")))
+        return;
+
+    quint32 result = 0;
+    QString uninitError;
+    if (!callAlgorithm(algo, layout, QStringLiteral("UnInit"), kUnInitTimeout,
+                       fnc, 0, 0, result, uninitError)) {
+        /* The flash is already programmed: a failed UnInit is reported but
+         * does not turn the operation into a failure. */
+        log(callbacks, QCoreApplication::translate("Flasher", "UnInit() failed: %1").arg(uninitError), true);
+    } else if (result != 0) {
+        log(callbacks, QCoreApplication::translate("Flasher", "UnInit() returned code %1.").arg(result), true);
+    }
+}
+
 /* ==========================================================================
  * Erase
  * ========================================================================== */
@@ -630,9 +699,13 @@ bool Flasher::verifyFlash(const FlashAlgo &algo, const Layout &layout,
                     return false;
                 }
 
-                if (result != 0) {
+                /* Verify() returns adr+sz on success and the failing address
+                 * otherwise - unlike the other algo routines, which return 0
+                 * for success. Checking against 0 rejects every valid verify. */
+                const quint32 expectedResult = pageBase + static_cast<quint32>(expected.size());
+                if (result != expectedResult) {
                     error = QCoreApplication::translate("Flasher", "Verification failed at 0x%1 (code %2).")
-                                .arg(pageBase, 8, 16, QLatin1Char('0'))
+                                .arg(result, 8, 16, QLatin1Char('0'))
                                 .arg(result);
                     return false;
                 }
@@ -796,98 +869,47 @@ bool Flasher::program(const Config &config, const QVector<FlashRange> &ranges,
         return false;
     }
 
-    /* ---------- 2. Init ---------- */
-    /* A target that is running its own program can take the debug access back
-     * between the halt and the call, and the core then never reaches the
-     * algorithm: Init() times out with the core sitting in whatever the target
-     * firmware was doing. Nothing about that state is broken, it is only
-     * stale, so the whole start-up sequence is rebuilt and the call is made
-     * once more before the session is given up. */
-    {
-        quint32 result = 0;
-        bool ok = false;
-
-        for (int attempt = 1; attempt <= kInitAttempts && !ok; ++attempt) {
-            if (attempt > 1) {
-                log(callbacks, QCoreApplication::translate("Flasher",
-                                   "Init() did not complete, restarting the algorithm (%1 of %2): %3")
-                                   .arg(attempt)
-                                   .arg(kInitAttempts)
-                                   .arg(error), true);
-
-                /* Halt first: it is the state the retry starts from, and the
-                 * halt is also what clears a MASKINTS that a previous release
-                 * left behind on a running core. */
-                QString haltError;
-                if (!core_->halt(haltError)) {
-                    error = haltError;
-                    break;
-                }
-
-                /* The RAM image is re-downloaded as well. A core that ran free
-                 * for a moment may have written over it, and a stale copy
-                 * fails in a way that looks random rather than diagnosable. */
-                if (!downloadAlgorithm(algo, layout, error))
-                    break;
-            }
-
-            ok = callAlgorithm(algo, layout, QStringLiteral("Init"), kInitTimeout,
-                               algo.info().deviceAddress, config.clockHz, 1, result, error);
-            if (ok && result != 0) {
-                error = QCoreApplication::translate("Flasher", "Init() failed with code %1.").arg(result);
-                ok = false;
-            }
-        }
-
-        if (!ok)
-            return false;
-    }
+    /* ---------- 2. Erase phase: Init(fnc=1) ---------- */
+    if (!initAlgorithm(algo, layout, config.clockHz, kFncErase, callbacks, error))
+        return false;
 
     if (!reportProgress(callbacks, kProgressInit, QCoreApplication::translate("Flasher", "Initialised.")))
         return false;
 
-    /* ---------- 3. Erase ---------- */
+    /* ---------- 3. Erase (fnc=1) ---------- */
     if (!eraseFlash(algo, layout, ranges, config, callbacks, stats, error)) {
-        QString ignored;
-        quint32 result = 0;
-        callAlgorithm(algo, layout, QStringLiteral("UnInit"), kUnInitTimeout, 1, 0, 0, result, ignored);
+        uninitAlgorithm(algo, layout, kFncErase, callbacks);
         return false;
     }
+    uninitAlgorithm(algo, layout, kFncErase, callbacks);
 
-    /* ---------- 4. Program ---------- */
-    /* An erase only run has nothing to write, and the algorithm is right to
-     * refuse an empty image: it is skipped instead of being called. */
-    if (!ranges.isEmpty() && !programFlash(algo, layout, ranges, callbacks, stats, error)) {
-        QString ignored;
-        quint32 result = 0;
-        callAlgorithm(algo, layout, QStringLiteral("UnInit"), kUnInitTimeout, 1, 0, 0, result, ignored);
-        return false;
-    }
+    /* CMSIS frames erase, program and verify as separate steps with their own
+     * Init/UnInit pair - some algorithms set up the flash differently per fnc. */
+    /* ---------- 4. Program (fnc=2), skipped for an erase-only run ---------- */
+    if (!ranges.isEmpty()) {
+        if (!initAlgorithm(algo, layout, config.clockHz, kFncProgram, callbacks, error))
+            return false;
 
-    /* ---------- 5. Verify ---------- */
-    if (!ranges.isEmpty() && config.verify
-        && !verifyFlash(algo, layout, ranges, callbacks, error)) {
-        QString ignored;
-        quint32 result = 0;
-        callAlgorithm(algo, layout, QStringLiteral("UnInit"), kUnInitTimeout, 1, 0, 0, result, ignored);
-        return false;
-    }
-
-    /* ---------- 6. UnInit ---------- */
-    if (algo.hasFunction(QStringLiteral("UnInit"))) {
-        quint32 result = 0;
-        QString uninitError;
-        if (!callAlgorithm(algo, layout, QStringLiteral("UnInit"), kUnInitTimeout,
-                           1, 0, 0, result, uninitError)) {
-            /* The flash is already programmed: a failed UnInit is reported but
-             * does not turn the operation into a failure. */
-            log(callbacks, QCoreApplication::translate("Flasher", "UnInit() failed: %1").arg(uninitError), true);
-        } else if (result != 0) {
-            log(callbacks, QCoreApplication::translate("Flasher", "UnInit() returned code %1.").arg(result), true);
+        if (!programFlash(algo, layout, ranges, callbacks, stats, error)) {
+            uninitAlgorithm(algo, layout, kFncProgram, callbacks);
+            return false;
         }
+        uninitAlgorithm(algo, layout, kFncProgram, callbacks);
     }
 
-    /* ---------- 7. Finish ---------- */
+    /* ---------- 5. Verify (fnc=3) ---------- */
+    if (!ranges.isEmpty() && config.verify) {
+        if (!initAlgorithm(algo, layout, config.clockHz, kFncVerify, callbacks, error))
+            return false;
+
+        if (!verifyFlash(algo, layout, ranges, callbacks, error)) {
+            uninitAlgorithm(algo, layout, kFncVerify, callbacks);
+            return false;
+        }
+        uninitAlgorithm(algo, layout, kFncVerify, callbacks);
+    }
+
+    /* ---------- 6. Finish ---------- */
     if (config.resetAfterProgram) {
         ResetMode used = config.resetMode;
         QString resetError;
